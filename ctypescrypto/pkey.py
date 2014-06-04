@@ -119,33 +119,3 @@ class PKey:
 		libcrypto.EVP_PKEY_CTX_free(ctx)
 		return PKey(key,True)
 			
-class X509:
-	def __init__(self,ptr):
-		self.cert = ptr
-	def __del__(self):
-		libcrypto.X509_free(self.cert)
-	def __str__(self):
-		""" Returns der string of the certificate """
-	def pubkey(self):
-		""" Returns EVP PKEy object of certificate public key"""
-		return PKey(libcrypto.X509_get_pubkey(self.cert,False)
-	def verify(self,key):	
-		""" Verify self on given issuer key """
-	def frompem(s):
-		""" Create X509 object from pem string """
-	def fromder(s):
-		""" Create X509 object from der string """
-
-class Verifier:
-	def __init__(self,filename):
-	
-	def verify_cert(self,cert):
-
-class Signer:
-	def __init__(self,key):
-		self.key = key
-	def sign(self,digest):
-		if not self.key.cansign:
-			raise ValueError("Current PKey doesn't contain private part")
-	def verify(self,signature,digest):
-
