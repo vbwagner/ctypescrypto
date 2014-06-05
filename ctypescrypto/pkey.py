@@ -6,6 +6,16 @@ from ctypescrypto.bio import Membio
 class PKeyError(LibCryptoError):
 	pass
 
+CALLBACK_FUNC=CFUNCTYPE(c_int,c_char_p,c_int,c_int,c_char_p)
+def password_callback(buf,length,rwflag,u)
+	cnt=len(u)
+	if length<cnt:
+		cnt=length
+	memmove(buf,u,cnt)
+	return cnt
+
+_cb=CALLBACK_FUNC(password_callback)
+
 class PKey:
 	def __init__(self,ptr,cansign)
 		self.key=ptr:
@@ -27,7 +37,7 @@ class PKey:
 	def privpem(s,password=None):
 		""" Class method for load from the pem string of private key """
 		b=Membio(s)
-		return PKey(libcrypto.PEM_read_bio_PrivateKey(b.bio,NULL,cb,c_char_p(password))
+		return PKey(libcrypto.PEM_read_bio_PrivateKey(b.bio,NULL,_cb,c_char_p(password))
 
 	def privder(s):
 		""" Class method for load from the binary ASN1 structure of private key """
@@ -49,9 +59,9 @@ class PKey:
 		"""
 		ctx=libcrypto.EVP_PKEY_CTX_new(self.key,None)
 		if ctx is None:
-			raise PkeyError("Initailizing sign context")
+			raise PKeyError("Initailizing sign context")
 		if libcrypto.EVP_PKEY_sign_init(ctx)<1:
-			raise PkeyError("sign_init")
+			raise PKeyError("sign_init")
 		for oper in kwargs:
 			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,kwargs[oper])
 			if rw=-2:
@@ -61,7 +71,7 @@ class PKey:
 		# Find out signature size
 		siglen=c_long(0)
 		if libcrypto.EVP_PKEY_sign(ctx,None,byref(siglen),digest,len(digest))<1:
-			raise PkeyError("signing")	
+			raise PKeyError("signing")	
 		sig=create_string_buffer(siglen.value)
 		libcrypto.EVP_PKEY_sign(ctx,sig,byref(signlen),digest,len(digest)
 		libcrypto.EVP_PKEY_CTX_free(ctx)
@@ -74,9 +84,9 @@ class PKey:
 		"""
 		ctx=libcrypto.EVP_PKEY_CTX_new(self.key,None)
 		if ctx is None:
-			raise PkeyError("Initailizing verify context")
+			raise PKeyError("Initailizing verify context")
 		if libcrypto.EVP_PKEY_verify_init(ctx)<1:
-			raise PkeyError("verify_init")
+			raise PKeyError("verify_init")
 		for oper in kwargs:
 			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,kwargs[oper])
 			if rw=-2:
