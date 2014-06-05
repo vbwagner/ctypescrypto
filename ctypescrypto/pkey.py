@@ -31,7 +31,7 @@ class PKey:
 			if format == "PEM":
 				self.key=libcrypto.PEM_read_bio_PrivateKey(b.bio,None,_cb,c_char_p(password))
 			else: 
-				self.key=libcrypto.d2i_PKCS8PrivateKey_bio(b.bio,None,_cb,c_char_p(password))
+				self.key=libcrypto.d2i_PrivateKey_bio(b.bio,None)
 			if self.key is None:
 				raise PKeyError("error parsing private key")
 		elif not pubkey is None:
@@ -75,7 +75,7 @@ class PKey:
 			raise PKeyError("sign_init")
 		for oper in kwargs:
 			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,kwargs[oper])
-			if rw==-2:
+			if rv==-2:
 				raise PKeyError("Parameter %s is not supported by key"%(oper))
 			if rv<1:
 				raise PKeyError("Error setting parameter %s"(oper))
@@ -84,9 +84,9 @@ class PKey:
 		if libcrypto.EVP_PKEY_sign(ctx,None,byref(siglen),digest,len(digest))<1:
 			raise PKeyError("signing")	
 		sig=create_string_buffer(siglen.value)
-		libcrypto.EVP_PKEY_sign(ctx,sig,byref(signlen),digest,len(digest))
+		libcrypto.EVP_PKEY_sign(ctx,sig,byref(siglen),digest,len(digest))
 		libcrypto.EVP_PKEY_CTX_free(ctx)
-		return sig.value[:siglen.value]
+		return sig.raw[:siglen.value]
 
 	def verify(self,digest,signature,**kwargs):
 		"""
@@ -100,15 +100,45 @@ class PKey:
 			raise PKeyError("verify_init")
 		for oper in kwargs:
 			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,kwargs[oper])
-			if rw==-2:
+			if rv==-2:
 				raise PKeyError("Parameter %s is not supported by key"%(oper))
 			if rv<1:
 				raise PKeyError("Error setting parameter %s"(oper))
 		rv=libcrypto.EVP_PKEY_verify(ctx,signature,len(signature),digest,len(digest))
 		if rv<0:
 			raise PKeyError("Signature verification")
-		libcrypto=EVP_PKEY_CTX_free(ctx)
+		libcrypto.EVP_PKEY_CTX_free(ctx)
 		return rv>0
+	def derive(self,peerkey,**kwargs):
+		"""
+			Derives shared key (DH,ECDH,VKO 34.10). Requires
+			private key available
+
+			@param peerkey - other key (may be public only)
+
+			Keyword parameters are algorithm-specific
+		"""
+		ctx=libcrypto.EVP_PKEY_CTX_new(self.key,None)
+		if ctx is None:
+			raise PKeyError("Initailizing derive context")
+		if libcrypto.EVP_PKEY_derive_init(ctx)<1:
+			raise PKeyError("derive_init")
+		for oper in kwargs:
+			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,kwargs[oper])
+			if rv==-2:
+				raise PKeyError("Parameter %s is not supported by key"%(oper))
+			if rv<1:
+				raise PKeyError("Error setting parameter %s"(oper))
+		if libcrypto.EVP_PKEY_derive_set_peer(ctx,peerkey.key)<=0:
+			raise PKeyError("Cannot set peer key")
+		keylen=c_long(0)
+		if libcrypto.EVP_PKEY_derive(ctx,None,byref(keylen))<=0:
+			raise PKeyError("computing shared key length")
+		buf=create_string_buffer(keylen)
+		if libcrypto.EVP_PKEY_derive(ctx,buf,byref(keylen))<=0:
+			raise PKeyError("computing actual shared key")
+		libcrypto.EVP_PKEY_CTX_free(ctx)
+		return buf.raw[:keylen]
 	def generate(algorithm,**kwargs):
 		"""
 			Generates new private-public key pair for given algorithm
@@ -139,7 +169,7 @@ class PKey:
 			raise PKeyError("Error generating key")
 		libcrypto.EVP_PKEY_CTX_free(ctx)
 		return PKey(ptr=key,cansign=True)
-			
+
 # Declare function prototypes
 libcrypto.EVP_PKEY_cmp.argtypes=(c_void_p,c_void_p)
 libcrypto.PEM_read_bio_PrivateKey.restype=c_void_p
@@ -148,3 +178,7 @@ libcrypto.d2i_PKCS8PrivateKey_bio.restype=c_void_p
 libcrypto.d2i_PKCS8PrivateKey_bio.argtypes=(c_void_p,POINTER(c_void_p),CALLBACK_FUNC,c_char_p)
 libcrypto.PEM_read_bio_PUBKEY.restype=c_void_p
 libcrypto.PEM_read_bio_PUBKEY.argtypes=(c_void_p,POINTER(c_void_p),CALLBACK_FUNC,c_char_p)
+libcrypto.d2i_PUBKEY_bio.restype=c_void_p
+libcrypto.d2i_PUBKEY_bio.argtypes=(c_void_p,c_void_p)
+libcrypto.EVP_PKEY_print_public.argtypes=(c_void_p,c_void_p,c_int,c_void_p)
+
