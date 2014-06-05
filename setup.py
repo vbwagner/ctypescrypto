@@ -32,13 +32,13 @@ class MyTests(distutils.cmd.Command):
 			print "All tests successful"
 
 setup(
-	name="ctypescrypto"
-	version="0.2.0"
-	description="CTypes-based interface for some OpenSSL libcrypto features"
+	name="ctypescrypto",
+	version="0.2.0",
+	description="CTypes-based interface for some OpenSSL libcrypto features",
 	author="Victor Wagner",
 	author_email="vitus@wagner.pp.ru",
 	url="https://github.com/vbwagner/ctypescrypto",
 	packages=["ctypescrypto"],
-	cmdlass={"test":MyTests}
+	cmdclass={"test":MyTests}
 )
 

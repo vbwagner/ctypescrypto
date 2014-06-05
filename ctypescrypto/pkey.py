@@ -1,13 +1,13 @@
-from ctypes import byref,c_int,c_long, c_longlong, create_string_buffer
+from ctypes import c_char_p,c_void_p,byref,c_int,c_long, c_longlong, create_string_buffer,CFUNCTYPE,POINTER
 from ctypescrypto import libcrypto
-from ctypescrypto.exception import LibCryptoErrors,clear_err_stack
+from ctypescrypto.exception import LibCryptoError,clear_err_stack
 from ctypescrypto.bio import Membio
 
 class PKeyError(LibCryptoError):
 	pass
 
 CALLBACK_FUNC=CFUNCTYPE(c_int,c_char_p,c_int,c_int,c_char_p)
-def password_callback(buf,length,rwflag,u)
+def password_callback(buf,length,rwflag,u):
 	cnt=len(u)
 	if length<cnt:
 		cnt=length
@@ -17,9 +17,36 @@ def password_callback(buf,length,rwflag,u)
 _cb=CALLBACK_FUNC(password_callback)
 
 class PKey:
-	def __init__(self,ptr,cansign)
-		self.key=ptr:
-		self.cansign=cansign
+	def __init__(self,ptr=None,privkey=None,pubkey=None,format="PEM",cansign=False,password=None):
+		if not ptr is None:
+			self.key=ptr
+			self.cansign=cansign
+			if not privkey is None or not pubkey is None:
+				raise TypeError("Just one of pubkey or privkey can be specified")
+		elif not privkey is None:
+			if not pubkey is None:
+				raise TypeError("Just one of pubkey or privkey can be specified")
+			b=Membio(privkey)
+			self.cansign=True
+			if format == "PEM":
+				self.key=libcrypto.PEM_read_bio_PrivateKey(b.bio,None,_cb,c_char_p(password))
+			else: 
+				self.key=libcrypto.d2i_PKCS8PrivateKey_bio(b.bio,None,_cb,c_char_p(password))
+			if self.key is None:
+				raise PKeyError("error parsing private key")
+		elif not pubkey is None:
+			b=Membio(pubkey)
+			self.cansign=False
+			if format == "PEM":
+				self.key=libcrypto.PEM_read_bio_PUBKEY(b.bio,None,_cb,None)
+			else:
+				self.key=libcrypto.d2i_PUBKEY_bio(b.bio,None)
+			if self.key is None:
+				raise PKeyError("error parsing public key")
+		else:
+			raise TypeError("Neither public, nor private key is specified")
+			
+
 	def __del__(self):
 		libcrypto.EVP_PKEY_free(self.key)
 	def __eq__(self,other):
@@ -32,25 +59,9 @@ class PKey:
 	def __str__(self):
 		""" printable representation of public key """	
 		b=Membio()
-		libcrypto.EVP_PKEY_print_public(b.bio,self.key,0,NULL)
+		libcrypto.EVP_PKEY_print_public(b.bio,self.key,0,None)
 		return str(b)
-	def privpem(s,password=None):
-		""" Class method for load from the pem string of private key """
-		b=Membio(s)
-		return PKey(libcrypto.PEM_read_bio_PrivateKey(b.bio,NULL,_cb,c_char_p(password))
 
-	def privder(s):
-		""" Class method for load from the binary ASN1 structure of private key """
-		b=Membio(s)
-		return PKey(libcrypto.d2i_PrivateKey_bio(b.bio,NULL),True)
-	def pubpem(s):
-		""" Class method for load from public key pem string"""
-		b=Membio(s)
-		return PKey(libcrypto.PEM_read_bio_PUBKEY(b.bio,NULL,cb,c_char_p(password)),False)
-	def pubder(s):
-		""" Class method for load from the binary ASN1 structure """
-		b=Membio(s)
-		return PKey(libcrypto.d2i_PUBKEY_bio(b.bio,NULL),False)
 	def sign(self,digest,**kwargs):
 		"""
 			Signs given digest and retirns signature
@@ -64,7 +75,7 @@ class PKey:
 			raise PKeyError("sign_init")
 		for oper in kwargs:
 			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,kwargs[oper])
-			if rw=-2:
+			if rw==-2:
 				raise PKeyError("Parameter %s is not supported by key"%(oper))
 			if rv<1:
 				raise PKeyError("Error setting parameter %s"(oper))
@@ -73,7 +84,7 @@ class PKey:
 		if libcrypto.EVP_PKEY_sign(ctx,None,byref(siglen),digest,len(digest))<1:
 			raise PKeyError("signing")	
 		sig=create_string_buffer(siglen.value)
-		libcrypto.EVP_PKEY_sign(ctx,sig,byref(signlen),digest,len(digest)
+		libcrypto.EVP_PKEY_sign(ctx,sig,byref(signlen),digest,len(digest))
 		libcrypto.EVP_PKEY_CTX_free(ctx)
 		return sig.value[:siglen.value]
 
@@ -89,7 +100,7 @@ class PKey:
 			raise PKeyError("verify_init")
 		for oper in kwargs:
 			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,kwargs[oper])
-			if rw=-2:
+			if rw==-2:
 				raise PKeyError("Parameter %s is not supported by key"%(oper))
 			if rv<1:
 				raise PKeyError("Error setting parameter %s"(oper))
@@ -119,7 +130,7 @@ class PKey:
 			raise PKeyError("keygen_init")
 		for oper in kwargs:
 			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,kwargs[oper])
-			if rw=-2:
+			if rw==-2:
 				raise PKeyError("Parameter %s is not supported by key"%(oper))
 			if rv<1:
 				raise PKeyError("Error setting parameter %s"(oper))
@@ -127,5 +138,13 @@ class PKey:
 		if libcrypto.EVP_PKEY_keygen(ctx,byref(key))<=0:
 			raise PKeyError("Error generating key")
 		libcrypto.EVP_PKEY_CTX_free(ctx)
-		return PKey(key,True)
+		return PKey(ptr=key,cansign=True)
 			
+# Declare function prototypes
+libcrypto.EVP_PKEY_cmp.argtypes=(c_void_p,c_void_p)
+libcrypto.PEM_read_bio_PrivateKey.restype=c_void_p
+libcrypto.PEM_read_bio_PrivateKey.argtypes=(c_void_p,POINTER(c_void_p),CALLBACK_FUNC,c_char_p) 
+libcrypto.d2i_PKCS8PrivateKey_bio.restype=c_void_p
+libcrypto.d2i_PKCS8PrivateKey_bio.argtypes=(c_void_p,POINTER(c_void_p),CALLBACK_FUNC,c_char_p)
+libcrypto.PEM_read_bio_PUBKEY.restype=c_void_p
+libcrypto.PEM_read_bio_PUBKEY.argtypes=(c_void_p,POINTER(c_void_p),CALLBACK_FUNC,c_char_p)

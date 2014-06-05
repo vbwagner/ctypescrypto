@@ -2,7 +2,7 @@ from ctypescrypto.pkey import PKey
 import unittest
 
 class TestReadPkey(unittest.TestCase):
-	test_unencrypted_pem(self):
+	def test_unencrypted_pem(self):
 		rsa="""-----BEGIN PRIVATE KEY-----
 MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAL9CzVZu9bczTmB8
 776pPUoPo6WbAfwQqqiGrj91bk2mYE+MNLo4yIQH45IcwGzkyS8+YyQJf8Bux5BC
@@ -33,7 +33,8 @@ Modulus:
     1b:a4:85:ab:b0:87:7b:78:2f
 Exponent: 65537 (0x10001)
 """
-		key=PKey.privpem(rsa)
+		key=PKey(privkey=rsa)
+		self.assertIsNotNone(key.key)
 		self.assertEqual(str(key),keytext)
 	def test_unencrypted_pem_ec(self):
 		pem="""-----BEGIN EC PRIVATE KEY-----
@@ -43,7 +44,7 @@ oUQDQgAEVil1nlGelogimdpB8fO45icsdBt2QdYkAvhqdgCWLMG0D4Rj4oCqJcyG
 -----END EC PRIVATE KEY-----
 """
 		keytext="""Public-Key: (256 bit)
-pub:
+pub: 
     04:56:29:75:9e:51:9e:96:88:22:99:da:41:f1:f3:
     b8:e6:27:2c:74:1b:76:41:d6:24:02:f8:6a:76:00:
     96:2c:c1:b4:0f:84:63:e2:80:aa:25:cc:86:d9:61:
@@ -52,17 +53,18 @@ pub:
 ASN1 OID: secp256k1
 """
 		
-		key=PKey.privpem(pem)
+		key=PKey(privkey=pem)
+		self.assertIsNotNone(key.key)
 		self.assertEqual(str(key),keytext)
 	def test_pubkey_pem(self):
-		pubkey="-----BEGIN PUBLIC KEY-----
+		pub="""-----BEGIN PUBLIC KEY-----
 MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEVil1nlGelogimdpB8fO45icsdBt2QdYk
 AvhqdgCWLMG0D4Rj4oCqJcyG2WH8J5+0DnGujfEA4TwJ90ECvLa2SA==
 -----END PUBLIC KEY-----
 """
-		key=PKey.pubpem(pem)
+		key=PKey(pubkey=pub)
 		keytext="""Public-Key: (256 bit)
-pub:
+pub: 
     04:56:29:75:9e:51:9e:96:88:22:99:da:41:f1:f3:
     b8:e6:27:2c:74:1b:76:41:d6:24:02:f8:6a:76:00:
     96:2c:c1:b4:0f:84:63:e2:80:aa:25:cc:86:d9:61:
@@ -70,7 +72,7 @@ pub:
     02:bc:b6:b6:48
 ASN1 OID: secp256k1
 """
-		
+		self.assertIsNotNone(key.key)	
 		self.assertEqual(str(key),keytext)
 	def test_compare(self):
 		pem="""-----BEGIN EC PRIVATE KEY-----
@@ -79,12 +81,16 @@ oUQDQgAEVil1nlGelogimdpB8fO45icsdBt2QdYkAvhqdgCWLMG0D4Rj4oCqJcyG
 2WH8J5+0DnGujfEA4TwJ90ECvLa2SA==
 -----END EC PRIVATE KEY-----
 """
-		pubkey="-----BEGIN PUBLIC KEY-----
+		pub="""-----BEGIN PUBLIC KEY-----
 MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEVil1nlGelogimdpB8fO45icsdBt2QdYk
 AvhqdgCWLMG0D4Rj4oCqJcyG2WH8J5+0DnGujfEA4TwJ90ECvLa2SA==
 -----END PUBLIC KEY-----
 """
-		key1=Pkey.privpem(pem)
-		key2=Pkey.pubpem(pubkey)
+		key1=PKey(privkey=pem)
+		self.assertIsNotNone(key1.key)
+		key2=PKey(pubkey=pub)
+		self.assertIsNotNone(key2.key)
 		self.assertEqual(key1,key2)
 
+if __name__ == "__main__":
+	unittest.main()
