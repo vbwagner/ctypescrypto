@@ -25,3 +25,4 @@ libcrypto.ENGINE_by_id.restype=c_void_p
 libcrypto.ENGINE_by_id.argtypes=(c_char_p,)
 libcrypto.ENGINE_set_default.argtypes=(c_void_p,c_int)
 libcrypto.ENGINE_ctrl_cmd_string.argtypes=(c_void_p,c_char_p,c_char_p,c_int)
+libcrypto.ENGINE_finish.argtypes=(c_char_p,)

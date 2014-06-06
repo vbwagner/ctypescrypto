@@ -139,6 +139,7 @@ class PKey:
 			raise PKeyError("computing actual shared key")
 		libcrypto.EVP_PKEY_CTX_free(ctx)
 		return buf.raw[:keylen]
+	@staticmethod
 	def generate(algorithm,**kwargs):
 		"""
 			Generates new private-public key pair for given algorithm
@@ -174,11 +175,11 @@ class PKey:
 libcrypto.EVP_PKEY_cmp.argtypes=(c_void_p,c_void_p)
 libcrypto.PEM_read_bio_PrivateKey.restype=c_void_p
 libcrypto.PEM_read_bio_PrivateKey.argtypes=(c_void_p,POINTER(c_void_p),CALLBACK_FUNC,c_char_p) 
-libcrypto.d2i_PKCS8PrivateKey_bio.restype=c_void_p
-libcrypto.d2i_PKCS8PrivateKey_bio.argtypes=(c_void_p,POINTER(c_void_p),CALLBACK_FUNC,c_char_p)
 libcrypto.PEM_read_bio_PUBKEY.restype=c_void_p
 libcrypto.PEM_read_bio_PUBKEY.argtypes=(c_void_p,POINTER(c_void_p),CALLBACK_FUNC,c_char_p)
 libcrypto.d2i_PUBKEY_bio.restype=c_void_p
 libcrypto.d2i_PUBKEY_bio.argtypes=(c_void_p,c_void_p)
+libcrypto.d2i_PrivateKey_bio.restype=c_void_p
+libcrypto.d2i_PrivateKey_bio.argtypes=(c_void_p,c_void_p)
 libcrypto.EVP_PKEY_print_public.argtypes=(c_void_p,c_void_p,c_int,c_void_p)
 

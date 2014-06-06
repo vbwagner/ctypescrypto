@@ -37,11 +37,12 @@ digests.py  - Interface  to EVP\_Digest\* family of functions.
 	Status: fully implemented and covered by tests
 
 ciphers.py - Interface to EVP\_Cipher family of function. 
-	Status: Needs documenting and test coverage
+	Status: Needs test coverage
 
 pkey.py - Low-level private key operations (like pkey, genpkey and p
     keyutl command line ops), all via algorithm-agnostic EVP interface.
-	Status: Designed and started to implement but not yet covered by tests
+	Status: Designed and started to implement but most functionality 
+	not yet covered by tests
 
 exception.py OpenSSL error stack to python exception conversion
 	Implemented.

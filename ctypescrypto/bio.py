@@ -64,3 +64,6 @@ libcrypto.BIO_ctrl.restype=c_long
 libcrypto.BIO_ctrl.argtypes=(c_void_p,c_int,c_long,POINTER(c_char_p))
 libcrypto.BIO_read.argtypes=(c_void_p,c_char_p,c_int)
 libcrypto.BIO_write.argtypes=(c_void_p,c_char_p,c_int)
+libcrypto.BIO_free.argtypes=(c_void_p,)
+libcrypto.BIO_new_mem_buf.restype=c_void_p
+libcrypto.BIO_new_mem_buf.argtypes=(c_char_p,c_int)
