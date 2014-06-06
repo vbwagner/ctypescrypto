@@ -2,7 +2,7 @@ from ctypes import c_char_p,c_void_p,byref,c_int,c_long, c_longlong, create_stri
 from ctypescrypto import libcrypto
 from ctypescrypto.exception import LibCryptoError,clear_err_stack
 from ctypescrypto.bio import Membio
-
+import sys
 class PKeyError(LibCryptoError):
 	pass
 
@@ -73,12 +73,7 @@ class PKey:
 			raise PKeyError("Initailizing sign context")
 		if libcrypto.EVP_PKEY_sign_init(ctx)<1:
 			raise PKeyError("sign_init")
-		for oper in kwargs:
-			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,kwargs[oper])
-			if rv==-2:
-				raise PKeyError("Parameter %s is not supported by key"%(oper))
-			if rv<1:
-				raise PKeyError("Error setting parameter %s"(oper))
+		self._configure_context(ctx,kwargs)
 		# Find out signature size
 		siglen=c_long(0)
 		if libcrypto.EVP_PKEY_sign(ctx,None,byref(siglen),digest,len(digest))<1:
@@ -92,18 +87,15 @@ class PKey:
 		"""
 			Verifies given signature on given digest
 			Returns True if Ok, False if don't match
+			Keyword arguments allows to set algorithm-specific
+			parameters
 		"""
 		ctx=libcrypto.EVP_PKEY_CTX_new(self.key,None)
 		if ctx is None:
 			raise PKeyError("Initailizing verify context")
 		if libcrypto.EVP_PKEY_verify_init(ctx)<1:
 			raise PKeyError("verify_init")
-		for oper in kwargs:
-			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,kwargs[oper])
-			if rv==-2:
-				raise PKeyError("Parameter %s is not supported by key"%(oper))
-			if rv<1:
-				raise PKeyError("Error setting parameter %s"(oper))
+		self._configure_context(ctx,kwargs)
 		rv=libcrypto.EVP_PKEY_verify(ctx,signature,len(signature),digest,len(digest))
 		if rv<0:
 			raise PKeyError("Signature verification")
@@ -123,12 +115,7 @@ class PKey:
 			raise PKeyError("Initailizing derive context")
 		if libcrypto.EVP_PKEY_derive_init(ctx)<1:
 			raise PKeyError("derive_init")
-		for oper in kwargs:
-			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,kwargs[oper])
-			if rv==-2:
-				raise PKeyError("Parameter %s is not supported by key"%(oper))
-			if rv<1:
-				raise PKeyError("Error setting parameter %s"(oper))
+		self._configure_context(self,ctx,kwargs)
 		if libcrypto.EVP_PKEY_derive_set_peer(ctx,peerkey.key)<=0:
 			raise PKeyError("Cannot set peer key")
 		keylen=c_long(0)
@@ -144,7 +131,25 @@ class PKey:
 		"""
 			Generates new private-public key pair for given algorithm
 			(string like 'rsa','ec','gost2001') and algorithm-specific
-			parameters
+			parameters.
+
+			Algorithm specific paramteers for RSA:
+
+			rsa_keygen_bits=number - size of key to be generated
+			rsa_keygen_pubexp - RSA public expontent(default 65537)
+
+			Algorithn specific parameters for DSA,DH and EC
+
+			paramsfrom=PKey object
+
+			copy parameters of newly generated key from existing key
+
+			Algorithm specific parameters for GOST2001
+
+			paramset= paramset name where name is one of
+			'A','B','C','XA','XB','test'
+
+			paramsfrom does work too
 		"""
 		tmpeng=c_void_p(None)
 		ameth=libcrypto.EVP_PKEY_asn1_find_str(byref(tmpeng),algorithm,-1)
@@ -154,23 +159,41 @@ class PKey:
 		pkey_id=c_int(0)
 		libcrypto.EVP_PKEY_asn1_get0_info(byref(pkey_id),None,None,None,None,ameth)
 		libcrypto.ENGINE_finish(tmpeng)
-		ctx=libcrypto.EVP_PKEY_CTX_new_id(pkey_id)
+		if "paramsfrom" in kwargs:
+			ctx=libcrypto.EVP_PKEY_CTX_new(kwargs["paramsfrom"].key,None)
+		else:
+			ctx=libcrypto.EVP_PKEY_CTX_new_id(pkey_id,None)
+		# FIXME support EC curve as keyword param by invoking paramgen
+		# operation
 		if ctx is None:
 			raise PKeyError("Creating context for key type %d"%(pkey_id.value)) 
 		if libcrypto.EVP_PKEY_keygen_init(ctx) <=0 :
 			raise PKeyError("keygen_init")
-		for oper in kwargs:
-			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,kwargs[oper])
-			if rw==-2:
-				raise PKeyError("Parameter %s is not supported by key"%(oper))
-			if rv<1:
-				raise PKeyError("Error setting parameter %s"(oper))
+		PKey._configure_context(ctx,kwargs,["paramsfrom"])
 		key=c_void_p(None)
 		if libcrypto.EVP_PKEY_keygen(ctx,byref(key))<=0:
 			raise PKeyError("Error generating key")
 		libcrypto.EVP_PKEY_CTX_free(ctx)
 		return PKey(ptr=key,cansign=True)
+	@staticmethod
+	def _configure_context(ctx,opts,skip=[]):
+		"""
+			Configures context of public key operations
+			@param ctx - context to configure
+			@param opts - dictionary of options (from kwargs of calling
+				function)
+			@param skip - list of options which shouldn't be passed to
+				context
+		"""
 
+		for oper in opts:
+			if oper in skip:
+				continue
+			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,str(opts[oper]))
+			if rv==-2:
+				raise PKeyError("Parameter %s is not supported by key"%(oper))
+			if rv<1:
+				raise PKeyError("Error setting parameter %s"(oper))
 # Declare function prototypes
 libcrypto.EVP_PKEY_cmp.argtypes=(c_void_p,c_void_p)
 libcrypto.PEM_read_bio_PrivateKey.restype=c_void_p
@@ -182,4 +205,36 @@ libcrypto.d2i_PUBKEY_bio.argtypes=(c_void_p,c_void_p)
 libcrypto.d2i_PrivateKey_bio.restype=c_void_p
 libcrypto.d2i_PrivateKey_bio.argtypes=(c_void_p,c_void_p)
 libcrypto.EVP_PKEY_print_public.argtypes=(c_void_p,c_void_p,c_int,c_void_p)
+libcrypto.EVP_PKEY_asn1_find_str.restype=c_void_p
+libcrypto.EVP_PKEY_asn1_find_str.argtypes=(c_void_p,c_char_p,c_int)
+libcrypto.EVP_PKEY_asn1_get0_info.restype=c_int
+libcrypto.EVP_PKEY_asn1_get0_info.argtypes=(POINTER(c_int),POINTER(c_int),POINTER(c_int),POINTER(c_char_p), POINTER(c_char_p),c_void_p)
+libcrypto.EVP_PKEY_cmp.restype=c_int
+libcrypto.EVP_PKEY_cmp.argtypes=(c_void_p,c_void_p)
+libcrypto.EVP_PKEY_CTX_ctrl_str.restype=c_int
+libcrypto.EVP_PKEY_CTX_ctrl_str.argtypes=(c_void_p,)
+libcrypto.EVP_PKEY_CTX_free.argtypes=(c_void_p,)
+libcrypto.EVP_PKEY_CTX_new.restype=c_void_p
+libcrypto.EVP_PKEY_CTX_new.argtypes=(c_void_p,c_void_p)
+libcrypto.EVP_PKEY_CTX_new_id.restype=c_void_p
+libcrypto.EVP_PKEY_CTX_new_id.argtypes=(c_int,c_void_p)
+libcrypto.EVP_PKEY_derive.restype=c_int
+libcrypto.EVP_PKEY_derive.argtypes=(c_void_p,c_char_p,POINTER(c_long))
+libcrypto.EVP_PKEY_derive_init.restype=c_int
+libcrypto.EVP_PKEY_derive_init.argtypes=(c_void_p,)
+libcrypto.EVP_PKEY_derive_set_peer.restype=c_int
+libcrypto.EVP_PKEY_derive_set_peer.argtypes=(c_void_p,c_void_p)
+libcrypto.EVP_PKEY_free.argtypes=(c_void_p,)
+libcrypto.EVP_PKEY_keygen.restype=c_int
+libcrypto.EVP_PKEY_keygen.argtypes=(c_void_p,c_void_p)
+libcrypto.EVP_PKEY_keygen_init.restype=c_int
+libcrypto.EVP_PKEY_keygen_init.argtypes=(c_void_p,)
+libcrypto.EVP_PKEY_sign.restype=c_int
+libcrypto.EVP_PKEY_sign.argtypes=(c_void_p,c_char_p,POINTER(c_long),c_char_p,c_long)
+libcrypto.EVP_PKEY_sign_init.restype=c_int
+libcrypto.EVP_PKEY_sign_init.argtypes=(c_void_p,)
+libcrypto.EVP_PKEY_verify.restype=c_int
+libcrypto.EVP_PKEY_verify.argtypes=(c_void_p,c_char_p,c_long,c_char_p,c_long)
+libcrypto.EVP_PKEY_verify_init.restype=c_int
+libcrypto.EVP_PKEY_verify_init.argtypes=(c_void_p,)
 

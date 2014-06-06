@@ -8,7 +8,7 @@ def pem2der(s):
 	data=s[start+6:finish]
 	return b64decode(data)
 
-class TestReadPkey(unittest.TestCase):
+class TestPKey(unittest.TestCase):
 	rsa="""-----BEGIN PRIVATE KEY-----
 MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAL9CzVZu9bczTmB8
 776pPUoPo6WbAfwQqqiGrj91bk2mYE+MNLo4yIQH45IcwGzkyS8+YyQJf8Bux5BC
@@ -93,5 +93,22 @@ AvhqdgCWLMG0D4Rj4oCqJcyG2WH8J5+0DnGujfEA4TwJ90ECvLa2SA==
 		self.assertTrue(len(signature)>0)
 		verifier=PKey(pubkey=self.ec1pub)
 		self.assertTrue(verifier.verify(digest,signature))
+	def test_generate(self):
+		newkey=PKey.generate("rsa")
+		self.assertIsNotNone(newkey.key)
+		s=str(newkey)
+		self.assertEqual(s[:s.find("\n")],"Public-Key: (1024 bit)")
+	def test_generate_params(self):
+		newkey=PKey.generate("rsa",rsa_keygen_bits=2048)
+		self.assertIsNotNone(newkey.key)
+		s=str(newkey)
+		self.assertEqual(s[:s.find("\n")],"Public-Key: (2048 bit)")
+	def test_generate_ec(self):
+		templkey=PKey(pubkey=self.ec1pub)
+		newkey=PKey.generate("ec",paramsfrom=templkey)
+		self.assertIsNotNone(newkey.key)
+		s=str(newkey)
+		self.assertEqual(s[:s.find("\n")],"Public-Key: (256 bit)")
+		self.assertNotEqual(str(templkey),str(newkey))
 if __name__ == "__main__":
 	unittest.main()
