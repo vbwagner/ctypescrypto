@@ -56,12 +56,15 @@ class TestEncryptDecrypt(unittest.TestCase):
 
 	def test_ofb_noiv(self):
 		data="sdfdsddfxx"
-		key='abcdabcd'
-		c=cipher.new("AES-256-OFB",key)
+		encryptkey='abcdabcd'*4
+		decryptkey=encryptkey[0:5]+encryptkey[5:]
+
+
+		c=cipher.new("AES-256-OFB",encryptkey)
 		enc=c.update(data)+c.finish()
 		# See if padding is added by default
 		self.assertEqual(len(enc),len(data))
-		d=cipher.new("AES-256-OFB",key,encrypt=False)
+		d=cipher.new("AES-256-OFB",decryptkey)
 		dec=d.update(enc)+d.finish()
 		self.assertEqual(data,dec)
 if __name__ == '__main__':
