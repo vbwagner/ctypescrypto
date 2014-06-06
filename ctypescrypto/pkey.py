@@ -175,6 +175,42 @@ class PKey:
 			raise PKeyError("Error generating key")
 		libcrypto.EVP_PKEY_CTX_free(ctx)
 		return PKey(ptr=key,cansign=True)
+	def exportpub(self,format="PEM"):
+		"""
+			Returns public key as PEM or DER structure.
+		"""
+		b=Membio()
+		if format == "PEM":
+			r=libcrypto.PEM_write_bio_PUBKEY(b.bio,self.key)
+		else:
+			r=libcrypto.i2d_PUBKEY_bio(b.bio,self.key)
+		if r==0:
+			raise PKeyError("error serializing public key")
+		return str(b)
+	def exportpriv(self,format="PEM",password=None,cipher=None):
+		"""
+			Returns public key as PEM or DER Structure.
+			If password and cipher are specified, encrypts key
+			on given password, using given algorithm. Cipher must be
+			an ctypescrypto.cipher.CipherType object
+		"""
+		b=Membio()
+		if cipher is None:
+			evp_cipher=None
+		else:
+			if password is None:
+				raise NotImplementedError("Interactive password entry is not supported")
+			evp_cipher=cipher.cipher
+		if format == "PEM":
+			r=libcrypto.PEM_write_bio_PrivateKey(b.bio,self.key,evp_cipher,_cb,
+				password)
+		else:
+			if cipher is not None:
+				raise NotImplementedError("Der-formatted encrypted keys are not supported")
+			r=libcrypto.i2d_PrivateKey_bio(b.bio,self.key)
+		if r==0:
+			raise PKeyError("error serializing private key")
+		return str(b)
 	@staticmethod
 	def _configure_context(ctx,opts,skip=[]):
 		"""
@@ -237,4 +273,7 @@ libcrypto.EVP_PKEY_verify.restype=c_int
 libcrypto.EVP_PKEY_verify.argtypes=(c_void_p,c_char_p,c_long,c_char_p,c_long)
 libcrypto.EVP_PKEY_verify_init.restype=c_int
 libcrypto.EVP_PKEY_verify_init.argtypes=(c_void_p,)
-
+libcrypto.PEM_write_bio_PrivateKey.argtypes=(c_void_p,c_void_p,CALLBACK_FUNC,c_char_p)
+libcrypto.PEM_write_bio_PUBKEY.argtypes=(c_void_p,c_void_p)
+libcrypto.i2d_PUBKEY_bio.argtypes=(c_void_p,c_void_p)
+libcrypto.i2d_PrivateKey_bio.argtypes=(c_void_p,c_void_p)

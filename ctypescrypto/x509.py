@@ -1,7 +1,12 @@
 from ctypes import c_void_p
 from ctypescrypto.bio import Membio
+from ctypescrypto.pkey import Pkey
 from ctypescrypto.exception import LibCryptoError
 from crypescrypto import libcrypto
+
+class X509Error(LibCryptoError):
+	pass
+
 
 class X509Name:
 	def __init__(self,ptr):
@@ -9,12 +14,15 @@ class X509Name:
 	def __del__(self):
 		libcrypto.X509_NAME_free(self.ptr)
 	def __str__(self):
+		b=Membio()
+		libcrypto.X509_NAME_print_ex(b.bio,self.ptr,0,PRING_FLAG)
+		return str(b).decode("utf-8")
 
 	def __len__(self):
 		return libcrypto.X509_NAME_entry_count(self.ptr)
 
 	def __getattr__(self,key):
-	  
+	  	
 	def __setattr__(self,key,val):
 
 class X509_extlist:
@@ -36,21 +44,33 @@ class X509_extlist:
 
 
 class X509:
-	def __init__(self,ptr):
-		self.cert = ptr
+	def __init__(self,data=None,ptr=None,format="PEM"):
+		if ptr is not None:
+			if data is not None: 
+				raise TypeError("Cannot use data and ptr simultaneously")
+			self.cert = ptr
+		elif data is None:
+				raise TypeError("data argument is required")
+			b=Membio(data)
+			if format == "PEM":
+				self.cert=libcrypto.PEM_read_bio_X509(b.bio,None,None,None)
+			else:
+				self.cert=libcrypto.d2i_X509_bio(b.bio,None)
+			if self.cert is None:
+				raise X509Error("error reading certificate")
 	def __del__(self):
 		libcrypto.X509_free(self.cert)
 	def __str__(self):
 		""" Returns der string of the certificate """
+		b=Membio()
+		if libcrypto.i2d_X509_bio(b.bio,self.cert)==0:
+			raise X509Error("error serializing certificate")
 	def pubkey(self):
 		""" Returns EVP PKEy object of certificate public key"""
-		return PKey(libcrypto.X509_get_pubkey(self.cert,False)
+		return PKey(ptr=libcrypto.X509_get_pubkey(self.cert,False))
 	def verify(self,key):	
 		""" Verify self on given issuer key """
-	def frompem(s):
-		""" Create X509 object from pem string """
-	def fromder(s):
-		""" Create X509 object from der string """
+
 	def subject(self):
 		return X509Name(libcrypto.X509_get_subject_name(self.cert))
 	def issuer(self):
