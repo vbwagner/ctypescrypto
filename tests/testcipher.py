@@ -64,8 +64,28 @@ class TestEncryptDecrypt(unittest.TestCase):
 		enc=c.update(data)+c.finish()
 		# See if padding is added by default
 		self.assertEqual(len(enc),len(data))
-		d=cipher.new("AES-256-OFB",decryptkey)
+		d=cipher.new("AES-256-OFB",decryptkey,encrypt=False)
 		dec=d.update(enc)+d.finish()
 		self.assertEqual(data,dec)
+	def test_wrong_keylength(self):
+		data="sdfsdfxxx"
+		key="abcdabcd"
+		with self.assertRaises(ValueError):
+			c=cipher.new("AES-128-OFB",key)
+	def test_wrong_ivlength(self):
+		key="abcdabcdabcdabcd"
+		iv="xxxxx"
+		with self.assertRaises(ValueError):
+			c=cipher.new("AES-128-OFB",key,iv=iv)
+	def test_variable_keylength(self):
+		encryptkey="abcdefabcdef"
+		data="asdfsdfsdfsdfsdfsdfsdfsdf"
+		iv="abcdefgh"
+		c=cipher.new("bf-ofb",encryptkey,iv=iv)
+		ciphertext=c.update(data)+c.finish()
+		decryptkey=encryptkey[0:5]+encryptkey[5:]
+		d=cipher.new("bf-ofb",decryptkey,iv=iv)
+		deciph=d.update(ciphertext)+d.finish()
+		self.assertEqual(deciph,data)
 if __name__ == '__main__':
 	unittest.main()

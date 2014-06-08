@@ -101,6 +101,10 @@ class Cipher:
 
 		"""
 		self._clean_ctx()
+		# Check key and iv length
+		if key is None:
+			raise ValueError("No key specified")
+
 		key_ptr = c_char_p(key)
 		iv_ptr = c_char_p(iv)
 		self.ctx = libcrypto.EVP_CIPHER_CTX_new()
@@ -111,6 +115,19 @@ class Cipher:
 			enc = 1
 		else: 
 			enc = 0
+		if not iv is None and len(iv) != cipher_type.iv_length():
+			raise ValueError("Invalid IV length for this algorithm")
+			
+		if len(key) != cipher_type.key_length():
+			if (cipher_type.flags() & 8) != 0:
+				# Variable key length cipher.
+				result = libcrypto.EVP_CipherInit_ex(self.ctx,cipher_type.cipher,None,None,None,c_int(enc))
+				result=libcrypto.EVP_CIPHER_CTX_set_key_length(self.ctx,len(key))
+				if result == 0:
+					self._clean_ctx()
+					raise CipherError("Unable to set key length")
+			else:
+				raise ValueError("Invalid key length for this algorithm")
 		result = libcrypto.EVP_CipherInit_ex(self.ctx, cipher_type.cipher, None, key_ptr, iv_ptr, c_int(enc))
 		if result == 0:
 			self._clean_ctx()
