@@ -225,4 +225,4 @@ libcrypto.EVP_CIPHER_nid.argtypes=(c_void_p,)
 libcrypto.EVP_CipherUpdate.argtypes=(c_void_p,c_char_p,POINTER(c_int),c_char_p,c_int)
 libcrypto.EVP_get_cipherbyname.restype=c_void_p
 libcrypto.EVP_get_cipherbyname.argtypes=(c_char_p,)
-
+libcrypto.EVP_CIPHER_CTX_set_key_length.argtypes=(c_void_p,c_int)

@@ -84,7 +84,7 @@ class TestEncryptDecrypt(unittest.TestCase):
 		c=cipher.new("bf-ofb",encryptkey,iv=iv)
 		ciphertext=c.update(data)+c.finish()
 		decryptkey=encryptkey[0:5]+encryptkey[5:]
-		d=cipher.new("bf-ofb",decryptkey,iv=iv)
+		d=cipher.new("bf-ofb",decryptkey,encrypt=False,iv=iv)
 		deciph=d.update(ciphertext)+d.finish()
 		self.assertEqual(deciph,data)
 if __name__ == '__main__':
