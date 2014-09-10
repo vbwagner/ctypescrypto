@@ -1,6 +1,7 @@
 from ctypes import c_void_p
 from ctypescrypto.bio import Membio
 from ctypescrypto.pkey import Pkey
+from ctypescrypto.oid import oid
 from ctypescrypto.exception import LibCryptoError
 from crypescrypto import libcrypto
 
@@ -22,9 +23,16 @@ class X509Name:
 		return libcrypto.X509_NAME_entry_count(self.ptr)
 
 	def __getattr__(self,key):
+		if isinstatce(key,Oid):
+		# Return list of strings
 	  	
-	def __setattr__(self,key,val):
+		elif isinstance(key,int):
+		# Return OID, sting tuple
+		else:
+			raise TypeError("X509 name can be indexed with oids and numbers only")
 
+	def __setattr__(self,key,val):
+		pass
 class X509_extlist:
 	def __init__(self,ptr):
 		self.ptr=ptr
@@ -65,21 +73,29 @@ class X509:
 		b=Membio()
 		if libcrypto.i2d_X509_bio(b.bio,self.cert)==0:
 			raise X509Error("error serializing certificate")
+	@property
 	def pubkey(self):
-		""" Returns EVP PKEy object of certificate public key"""
+		"""EVP PKEy object of certificate public key"""
 		return PKey(ptr=libcrypto.X509_get_pubkey(self.cert,False))
 	def verify(self,key):	
 		""" Verify self on given issuer key """
-
+	@property
 	def subject(self):
+		""" X509Name for certificate subject name """
 		return X509Name(libcrypto.X509_get_subject_name(self.cert))
+	@property
 	def issuer(self):
+		""" X509Name for certificate issuer name """
 		return X509Name(libcrypto.X509_get_issuer_name(self.cert))
+	@property
 	def serial(self):
+		""" Serial number of certificate as integer """
 		return
-
+	@property
 	def startDate(self):
-
+		""" Certificate validity period start date """
+	@property
 	def endDate(self);
+		""" Certificate validity period end date """
 
 	def extensions(self):

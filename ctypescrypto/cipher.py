@@ -121,7 +121,7 @@ class Cipher:
 		if len(key) != cipher_type.key_length():
 			if (cipher_type.flags() & 8) != 0:
 				# Variable key length cipher.
-				result = libcrypto.EVP_CipherInit_ex(self.ctx,cipher_type.cipher,None,None,None,c_int(enc))
+				result = libcrypto.EVP_CipherInit_ex(self.ctx, cipher_type.cipher, None, key_ptr, iv_ptr, c_int(enc))
 				result=libcrypto.EVP_CIPHER_CTX_set_key_length(self.ctx,len(key))
 				if result == 0:
 					self._clean_ctx()
@@ -187,7 +187,7 @@ class Cipher:
 			raise CipherError, "Cipher operation is already completed"
 		outbuf=create_string_buffer(self.block_size)
 		self.cipher_finalized = True
-		outlen=c_int()
+		outlen=c_int(0)
 		result = libcrypto.EVP_CipherFinal_ex(self.ctx,outbuf , byref(outlen))
 		if result == 0:
 			self._clean_ctx()
