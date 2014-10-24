@@ -121,14 +121,16 @@ class Cipher:
 		if len(key) != cipher_type.key_length():
 			if (cipher_type.flags() & 8) != 0:
 				# Variable key length cipher.
-				result = libcrypto.EVP_CipherInit_ex(self.ctx, cipher_type.cipher, None, key_ptr, iv_ptr, c_int(enc))
+				result = libcrypto.EVP_CipherInit_ex(self.ctx, cipher_type.cipher, None, None, None, c_int(enc))
 				result=libcrypto.EVP_CIPHER_CTX_set_key_length(self.ctx,len(key))
 				if result == 0:
 					self._clean_ctx()
 					raise CipherError("Unable to set key length")
+				result = libcrypto.EVP_CipherInit_ex(self.ctx, None, None, key_ptr, iv_ptr, c_int(enc))
 			else:
 				raise ValueError("Invalid key length for this algorithm")
-		result = libcrypto.EVP_CipherInit_ex(self.ctx, cipher_type.cipher, None, key_ptr, iv_ptr, c_int(enc))
+		else:
+			result = libcrypto.EVP_CipherInit_ex(self.ctx, cipher_type.cipher, None, key_ptr, iv_ptr, c_int(enc))
 		if result == 0:
 			self._clean_ctx()
 			raise CipherError, "Unable to initialize cipher"
