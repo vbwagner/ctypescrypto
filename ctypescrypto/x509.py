@@ -1,9 +1,9 @@
 from ctypes import c_void_p
 from ctypescrypto.bio import Membio
-from ctypescrypto.pkey import Pkey
-from ctypescrypto.oid import oid
+from ctypescrypto.pkey import PKey
+from ctypescrypto.oid import Oid
 from ctypescrypto.exception import LibCryptoError
-from crypescrypto import libcrypto
+from ctypescrypto import libcrypto
 
 class X509Error(LibCryptoError):
 	pass
@@ -23,11 +23,12 @@ class X509Name:
 		return libcrypto.X509_NAME_entry_count(self.ptr)
 
 	def __getattr__(self,key):
-		if isinstatce(key,Oid):
+		if isinstance(key,Oid):
 		# Return list of strings
-	  	
+	  		raise NotImpemented	
 		elif isinstance(key,int):
-		# Return OID, sting tuple
+			# Return OID, sting tuple
+			raise NotImplemented
 		else:
 			raise TypeError("X509 name can be indexed with oids and numbers only")
 
@@ -39,14 +40,14 @@ class X509_extlist:
 	def __del__(self):
 		libcrypto.X509_NAME_free(self.ptr)
 	def __str__(self):
-
+		raise NotImplemented
 	def __len__(self):
 		return libcrypto.X509_NAME_entry_count(self.ptr)
 
 	def __getattr__(self,key):
-	  
+	  	raise NotImplemented
 	def __setattr__(self,key,val):
-
+		raise NotImplemented
 
 	
 
@@ -58,7 +59,7 @@ class X509:
 				raise TypeError("Cannot use data and ptr simultaneously")
 			self.cert = ptr
 		elif data is None:
-				raise TypeError("data argument is required")
+			raise TypeError("data argument is required")
 			b=Membio(data)
 			if format == "PEM":
 				self.cert=libcrypto.PEM_read_bio_X509(b.bio,None,None,None)
@@ -94,8 +95,10 @@ class X509:
 	@property
 	def startDate(self):
 		""" Certificate validity period start date """
+		raise NotImplemented
 	@property
-	def endDate(self);
+	def endDate(self):
 		""" Certificate validity period end date """
-
+		raise NotImplemented
 	def extensions(self):
+		raise NotImplemented
