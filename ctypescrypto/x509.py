@@ -60,6 +60,7 @@ class X509:
 			self.cert = ptr
 		elif data is None:
 			raise TypeError("data argument is required")
+		else:
 			b=Membio(data)
 			if format == "PEM":
 				self.cert=libcrypto.PEM_read_bio_X509(b.bio,None,None,None)
