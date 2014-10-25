@@ -1,3 +1,11 @@
+"""
+low-level private/public keypair operation
+
+PKey object of this module is wrapper around OpenSSL EVP_PKEY object.
+"""
+
+This module provides interface for 
+
 from ctypes import c_char_p,c_void_p,byref,c_int,c_long, c_longlong, create_string_buffer,CFUNCTYPE,POINTER
 from ctypescrypto import libcrypto
 from ctypescrypto.exception import LibCryptoError,clear_err_stack
@@ -8,6 +16,11 @@ class PKeyError(LibCryptoError):
 
 CALLBACK_FUNC=CFUNCTYPE(c_int,c_char_p,c_int,c_int,c_char_p)
 def password_callback(buf,length,rwflag,u):
+"""
+Example password callback for private key. Assumes that 
+password is store in the userdata parameter, so allows to pass password
+from constructor arguments to the libcrypto keyloading functions
+"""
 	cnt=len(u)
 	if length<cnt:
 		cnt=length

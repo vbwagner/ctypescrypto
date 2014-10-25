@@ -1,5 +1,6 @@
 """	
  Interface to OpenSSL object identifier database.
+
  It is primarily intended to deal with OIDs which are compiled into the
  database or defined in the openssl configuration files.
 

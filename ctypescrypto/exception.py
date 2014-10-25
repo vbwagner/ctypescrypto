@@ -1,3 +1,6 @@
+"""
+Exception which extracts libcrypto error information
+"""
 from ctypes import *
 from ctypescrypto import libcrypto
 strings_loaded=False

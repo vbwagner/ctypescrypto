@@ -1,3 +1,7 @@
+"""
+access to symmetric ciphers from libcrypto
+
+"""
 from ctypes import create_string_buffer,c_char_p,c_void_p,c_int,c_long,byref,POINTER
 from ctypescrypto import libcrypto
 from ctypescrypto.exception import LibCryptoError

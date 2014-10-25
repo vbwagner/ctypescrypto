@@ -1,9 +1,16 @@
+"""
+engine loading and configuration
+"""
 from ctypes import *
 from ctypescrypto import libcrypto
 from ctypescrypto.exception import LibCryptoError
 default=None
 
 def set_default(engine):
+	"""
+		Loads specified engine and sets it as default for all 
+		algorithms, supported by it
+	"""
 	global default
 	e=libcrypto.ENGINE_by_id(engine)
 	if e is None:
