@@ -10,7 +10,7 @@ def create(curve,data):
 		Creates EC keypair from the just secret key and curve name
 		
 		@param curve - name of elliptic curve
-		@param num - long number representing key
+		@param num - byte array or long number representing key
 	"""
 	ec=libcrypto.EC_KEY_new_by_curve_name(curve.nid)
 	if ec is None:	
@@ -20,13 +20,16 @@ def create(curve,data):
 		raise PKeyError("EC_KEY_get0_group")
 	libcrypto.EC_GROUP_set_asn1_flag(group,1)
 	raw_key=libcrypto.BN_new()
-	if raw_key is None:
-		raise PKeyError("BN_new")
+	if isinstance(data,int):
+		BN_hex2bn(byref(raw_key),hex(data))
+	else:
+		if raw_key is None:
+			raise PKeyError("BN_new")
+		if libcrypto.BN_bin2bn(data,len(data),raw_key) is None:
+			raise PKeyError("BN_bin2bn")
 	ctx=libcrypto.BN_CTX_new()
 	if ctx is None:
 		raise PKeyError("BN_CTX_new")
-	if libcrypto.BN_bin2bn(data,len(data),raw_key) is None:
-		raise PKeyError("BN_bin2bn")
 	order=libcrypto.BN_new()
 	if order is None:
 		raise PKeyError("BN_new")
