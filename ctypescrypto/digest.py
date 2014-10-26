@@ -1,5 +1,6 @@
 """
-	Implmenets interface to OpenSSL EVP_Digest* functions.
+	Implements interface to OpenSSL EVP_Digest* functions.
+
 	Interface  made as close to hashlib as possible.
 
 	This module is really an excess effort. Hashlib allows access to

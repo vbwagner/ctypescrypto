@@ -1,10 +1,9 @@
 """
-low-level private/public keypair operation
+This module provides interface for low-level private/public keypair operation
 
 PKey object of this module is wrapper around OpenSSL EVP_PKEY object.
 """
 
-This module provides interface for 
 
 from ctypes import c_char_p,c_void_p,byref,c_int,c_long, c_longlong, create_string_buffer,CFUNCTYPE,POINTER
 from ctypescrypto import libcrypto
@@ -16,11 +15,11 @@ class PKeyError(LibCryptoError):
 
 CALLBACK_FUNC=CFUNCTYPE(c_int,c_char_p,c_int,c_int,c_char_p)
 def password_callback(buf,length,rwflag,u):
-"""
-Example password callback for private key. Assumes that 
-password is store in the userdata parameter, so allows to pass password
-from constructor arguments to the libcrypto keyloading functions
-"""
+	"""
+	Example password callback for private key. Assumes that 
+	password is store in the userdata parameter, so allows to pass password
+	from constructor arguments to the libcrypto keyloading functions
+	"""
 	cnt=len(u)
 	if length<cnt:
 		cnt=length
@@ -202,7 +201,7 @@ class PKey:
 		return str(b)
 	def exportpriv(self,format="PEM",password=None,cipher=None):
 		"""
-			Returns public key as PEM or DER Structure.
+			Returns private key as PEM or DER Structure.
 			If password and cipher are specified, encrypts key
 			on given password, using given algorithm. Cipher must be
 			an ctypescrypto.cipher.CipherType object
@@ -215,7 +214,7 @@ class PKey:
 				raise NotImplementedError("Interactive password entry is not supported")
 			evp_cipher=cipher.cipher
 		if format == "PEM":
-			r=libcrypto.PEM_write_bio_PrivateKey(b.bio,self.key,evp_cipher,_cb,
+			r=libcrypto.PEM_write_bio_PrivateKey(b.bio,self.key,evp_cipher,None,0,_cb,
 				password)
 		else:
 			if cipher is not None:
@@ -286,7 +285,7 @@ libcrypto.EVP_PKEY_verify.restype=c_int
 libcrypto.EVP_PKEY_verify.argtypes=(c_void_p,c_char_p,c_long,c_char_p,c_long)
 libcrypto.EVP_PKEY_verify_init.restype=c_int
 libcrypto.EVP_PKEY_verify_init.argtypes=(c_void_p,)
-libcrypto.PEM_write_bio_PrivateKey.argtypes=(c_void_p,c_void_p,CALLBACK_FUNC,c_char_p)
+libcrypto.PEM_write_bio_PrivateKey.argtypes=(c_void_p,c_void_p,c_void_p,c_char_p,c_int,CALLBACK_FUNC,c_char_p)
 libcrypto.PEM_write_bio_PUBKEY.argtypes=(c_void_p,c_void_p)
 libcrypto.i2d_PUBKEY_bio.argtypes=(c_void_p,c_void_p)
 libcrypto.i2d_PrivateKey_bio.argtypes=(c_void_p,c_void_p)

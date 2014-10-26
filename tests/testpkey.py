@@ -39,11 +39,11 @@ Modulus:
     1b:a4:85:ab:b0:87:7b:78:2f
 Exponent: 65537 (0x10001)
 """
-	ec1priv="""-----BEGIN EC PRIVATE KEY-----
-MHQCAQEEICpxup3qmbwffBBLrsZx7H7/i/+Wm7jTRttMM1KkaZ3DoAcGBSuBBAAK
-oUQDQgAEVil1nlGelogimdpB8fO45icsdBt2QdYkAvhqdgCWLMG0D4Rj4oCqJcyG
-2WH8J5+0DnGujfEA4TwJ90ECvLa2SA==
------END EC PRIVATE KEY-----
+	ec1priv="""-----BEGIN PRIVATE KEY-----
+MIGEAgEAMBAGByqGSM49AgEGBSuBBAAKBG0wawIBAQQgKnG6neqZvB98EEuuxnHs
+fv+L/5abuNNG20wzUqRpncOhRANCAARWKXWeUZ6WiCKZ2kHx87jmJyx0G3ZB1iQC
++Gp2AJYswbQPhGPigKolzIbZYfwnn7QOca6N8QDhPAn3QQK8trZI
+-----END PRIVATE KEY-----
 """
 	ec1keytext="""Public-Key: (256 bit)
 pub: 
@@ -59,10 +59,15 @@ MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEVil1nlGelogimdpB8fO45icsdBt2QdYk
 AvhqdgCWLMG0D4Rj4oCqJcyG2WH8J5+0DnGujfEA4TwJ90ECvLa2SA==
 -----END PUBLIC KEY-----
 """
+	
 	def test_unencrypted_pem(self):
 		key=PKey(privkey=self.rsa)
 		self.assertIsNotNone(key.key)
 		self.assertEqual(str(key),self.rsakeytext)
+	def test_export_priv_pem(self):
+		key=PKey(privkey=self.ec1priv)
+		out=key.exportpriv()
+		self.assertEqual(self.ec1priv,out)
 	def test_unencrypted_pem_ec(self):
 		
 		key=PKey(privkey=self.ec1priv)
