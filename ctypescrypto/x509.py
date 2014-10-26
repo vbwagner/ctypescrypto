@@ -178,22 +178,22 @@ class X509:
 			ctx=libcrypto.X509_STORE_CTX_new()
 			if ctx is None:
 				raise X509Error("Error allocating X509_STORE_CTX")
-			if libcrypt.X509_STORE_CTX_init(ctx,store.ptr,self.cert,None) < 0:
+			if libcrypto.X509_STORE_CTX_init(ctx,store.ptr,self.cert,None) < 0:
 				raise X509Error("Error allocating X509_STORE_CTX")
-			res= libcrypto.X509_verify_cert(ctx)>0
+			res= libcrypto.X509_verify_cert(ctx)
 			libcrypto.X509_STORE_CTX_free(ctx)
-			return res
+			return res>0
 		else:
 			if key is None:
 				if self.issuer != self.subject:
 					# Not a self-signed certificate
 					return False
 				key = self.pubkey
-				res = libcrypto.X509_verify(self.cert,key.ptr)
-				if res < 0:
-					raise X509Error("X509_verify failed")
-				return res>0
-
+			res = libcrypto.X509_verify(self.cert,key.key)
+			if res < 0:
+				raise X509Error("X509_verify failed")
+			return res>0
+			
 	@property
 	def subject(self):
 		""" X509Name for certificate subject name """
@@ -220,7 +220,11 @@ class X509:
 		# Need deep poke into certificate structure (x)->cert_info->validity->notAfter
 		raise NotImplementedError
 	def extensions(self):
+		""" Returns list of extensions """
 		raise NotImplementedError
+	def check_ca(self):
+		""" Returns True if certificate is CA certificate """
+		return libcrypto.X509_check_ca(self.cert)>0
 class X509Store:
 	"""
 		Represents trusted certificate store. Can be used to lookup CA certificates to verify
