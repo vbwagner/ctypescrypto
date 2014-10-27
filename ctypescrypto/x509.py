@@ -1,10 +1,9 @@
-from ctypes import c_void_p,create_string_buffer,c_long,c_int
+from ctypes import c_void_p,create_string_buffer,c_long,c_int,POINTER,c_char_p
 from ctypescrypto.bio import Membio
 from ctypescrypto.pkey import PKey
 from ctypescrypto.oid import Oid
 from ctypescrypto.exception import LibCryptoError
 from ctypescrypto import libcrypto
-
 class X509Error(LibCryptoError):
 	"""
 	Exception, generated when some openssl function fail
@@ -178,7 +177,7 @@ class X509:
 			ctx=libcrypto.X509_STORE_CTX_new()
 			if ctx is None:
 				raise X509Error("Error allocating X509_STORE_CTX")
-			if libcrypto.X509_STORE_CTX_init(ctx,store.ptr,self.cert,None) < 0:
+			if libcrypto.X509_STORE_CTX_init(ctx,store.store,self.cert,None) < 0:
 				raise X509Error("Error allocating X509_STORE_CTX")
 			res= libcrypto.X509_verify_cert(ctx)
 			libcrypto.X509_STORE_CTX_free(ctx)
@@ -243,21 +242,22 @@ class X509Store:
 		# Todo - set verification flags
 		# 
 		self.store=libcrypto.X509_STORE_new()
+		if self.store is None:
+			raise X509Error("allocating store")
 		lookup=libcrypto.X509_STORE_add_lookup(self.store,libcrypto.X509_LOOKUP_file())
 		if lookup is None:
 			raise X509Error("error installing file lookup method")
 		if (file is not None):
-			if not libcrypto.X509_LOOKUP_loadfile(lookup,file,1):
+			if not libcrypto.X509_LOOKUP_ctrl(lookup,1,file,1,None)>0:
 				raise X509Error("error loading trusted certs from file "+file)
-		
 		lookup=libcrypto.X509_STORE_add_lookup(self.store,libcrypto.X509_LOOKUP_hash_dir())
 		if lookup is None:
 			raise X509Error("error installing hashed lookup method")
 		if dir is not None:
-			if not libcrypto.X509_LOOKUP_add_dir(lookup,dir,1):
+			if not libcrypto.X509_LOOKUP_ctrl(lookup,2,dir,1,None)>0:
 				raise X509Error("error adding hashed  trusted certs dir "+dir)
 		if default:
-			if not libcrypto.X509_LOOKUP.add_dir(lookup,None,3):
+			if not libcrypto.X509_LOOKUP_ctrl(lookup,2,None,3,None)>0:
 				raise X509Error("error adding default trusted certs dir ")
 	def add_cert(self,cert):
 		"""
@@ -302,3 +302,10 @@ libcrypto.X509_NAME_ENTRY_get_object.argtypes=(c_void_p,)
 libcrypto.OBJ_obj2nid.argtypes=(c_void_p,)
 libcrypto.X509_NAME_get_entry.restype=c_void_p
 libcrypto.X509_NAME_get_entry.argtypes=(c_void_p,c_int)
+libcrypto.X509_STORE_new.restype=c_void_p
+libcrypto.X509_STORE_add_lookup.restype=c_void_p
+libcrypto.X509_STORE_add_lookup.argtypes=(c_void_p,c_void_p)
+libcrypto.X509_LOOKUP_file.restype=c_void_p
+libcrypto.X509_LOOKUP_hash_dir.restype=c_void_p
+libcrypto.X509_LOOKUP_ctrl.restype=c_int
+libcrypto.X509_LOOKUP_ctrl.argtypes=(c_void_p,c_int,c_char_p,c_long,POINTER(c_char_p))
