@@ -141,3 +141,7 @@ specified engine by id and makes it default for all algorithms,
 supported by it. It is enough for me to use Russian national
 cryptographic algoritms, provided by **gost** engine.
 
+Test Suite
+----------
+
+Test suite is fairly incomplete. Contributions are welcome.
