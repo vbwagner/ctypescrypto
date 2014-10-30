@@ -38,23 +38,52 @@ class TestDigestType(unittest.TestCase):
 
 class TestIface(unittest.TestCase):
 	""" Test all methods with one algorithms """
+	msg="A quick brown fox jumps over the lazy dog."
+	dgst="00CFFE7312BF9CA73584F24BDF7DF1D028340397"
 	def test_cons(self):
 		md=digest.DigestType("sha1")
 		dgst=digest.Digest(md)
-		dgst.update("A quick brown fox jumps over the lazy dog.")
+		dgst.update(self.msg)
 		self.assertEqual(dgst.digest_size,20)
-		self.assertEqual(dgst.hexdigest(),"00CFFE7312BF9CA73584F24BDF7DF1D028340397")
+		self.assertEqual(dgst.hexdigest(),self.dgst)
+	def test_length(self):
+		l=len(self.msg)
+		msg=self.msg+" Dog barks furiously."
+		dgst=digest.new("sha1")
+		dgst.update(msg,length=l)
+		self.assertEqual(dgst.hexdigest(),self.dgst)
+	def test_badlength(self):
+		l=len(self.msg)
+		dgst=digest.new("sha1")
+		with self.assertRaises(ValueError):
+			dgst.update(self.msg,length=l+1)
 	def test_bindigest(self):
 		dgst=digest.new("sha1")
-		dgst.update("A quick brown fox jumps over the lazy dog.")
+		dgst.update(self.msg)
 		self.assertEqual(dgst.digest_size,20)
-		self.assertEqual(dgst.digest(),b16decode("00CFFE7312BF9CA73584F24BDF7DF1D028340397",True)) 
+		self.assertEqual(dgst.digest(),b16decode(self.dgst,True)) 
 	def test_duplicatedigest(self):
 		dgst=digest.new("sha1")
-		dgst.update("A quick brown fox jumps over the lazy dog.")
+		dgst.update(self.msg)
 		v1=dgst.digest()
 		v2=dgst.digest()
 		self.assertEqual(v1,v2)
+	def test_updatefinalized(self):
+		dgst=digest.new("sha1")
+		dgst.update(self.msg)
+		h=dgst.hexdigest()
+		with self.assertRaises(digest.DigestError):
+			dgst.update(self.msg)
+	def test_wrongtype(self):
+		dgst=digest.new("sha1")
+		with self.assertRaises(TypeError):
+			dgst.update(['a','b','c'])
+		with self.assertRaises(TypeError):
+			dgst.update(18)
+		with self.assertRaises(TypeError):
+			dgst.update({"a":"b","c":"D"})
+		with self.assertRaises(TypeError):
+			dgst.update(u'\u0430\u0431')
 	def test_copy(self):
 		dgst=digest.new("sha1")
 		dgst.update("A quick brown fox jumps over ")
@@ -93,6 +122,9 @@ class TestAlgo(unittest.TestCase):
 		self.assertEqual(d.digest_size,64)
 		d.update("A quick brown fox jumps over the lazy dog.")
 		self.assertEqual(d.hexdigest(),"3045575CF3B873DD656F5F3426E04A4ACD11950BB2538772EE14867002B408E21FF18EF7F7B2CAB484A3C1C0BE3F8ACC4AED536A427353C7748DC365FC1A8646")
+	def test_wrongdigest(self):
+		with self.assertRaises(digest.DigestError):
+			dgst=digest.new("no-such-digest")
 
 if __name__ == "__main__":
 	unittest.main()

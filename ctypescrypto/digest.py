@@ -81,15 +81,23 @@ class Digest:
 	def __del__(self):
 		self._clean_ctx()
 
-	def update(self, data):
+	def update(self, data, length=None):
 		"""
-			Hashes given byte string as data
+			Hashes given byte string 
+
+			@param data - string to hash
+			@param length - if not specifed, entire string is hashed,
+					otherwise only first length bytes
 		"""
 		if self.digest_finalized:
 			raise DigestError, "No updates allowed"
 		if type(data) != type(""):
 			raise TypeError, "A string is expected"
-		result = libcrypto.EVP_DigestUpdate(self.ctx, c_char_p(data), len(data))
+		if length is None:
+			length=len(data)
+		elif length> len(data):
+			raise ValueError("Specified length is greater than length of data")
+		result = libcrypto.EVP_DigestUpdate(self.ctx, c_char_p(data), length)
 		if result != 1:
 			raise DigestError, "Unable to update digest"
 		
