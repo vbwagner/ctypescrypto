@@ -83,6 +83,8 @@ class Membio:
 		Resets the read-only bio to start and discards all data from writable bio
 		"""
 		libcrypto.BIO_ctrl(self.bio,1,0,None)
+
+__all__ = ['Membio']
 libcrypto.BIO_s_mem.restype=c_void_p
 libcrypto.BIO_new.restype=c_void_p
 libcrypto.BIO_new.argtypes=(c_void_p,)

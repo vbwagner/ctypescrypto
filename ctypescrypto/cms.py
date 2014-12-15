@@ -279,7 +279,7 @@ class EncryptedData(CMSBase):
 				raise CMSError("decrypt data")
 		return str(b)
 
-		
+__all__=['CMS','CMSError','Flags','SignedData','EnvelopedData','EncryptedData']
 
 libcrypto.CMS_verify.restype=c_int
 libcrypto.CMS_verify.argtypes=(c_void_p,c_void_p,c_void_p,c_void_p,c_void_p,c_int)

@@ -4,6 +4,9 @@ engine loading and configuration
 from ctypes import *
 from ctypescrypto import libcrypto
 from ctypescrypto.exception import LibCryptoError
+
+__all__=['default','set_default']
+
 default=None
 
 def set_default(engine):

@@ -1,9 +1,22 @@
+"""
+Implements interface to openssl X509 and X509Store structures, 
+I.e allows to load, analyze and verify certificates.
+
+X509Store objects are also used to verify other signed documets,
+such as CMS, OCSP and timestamps.
+"""
+
+
+
 from ctypes import c_void_p,create_string_buffer,c_long,c_int,POINTER,c_char_p
 from ctypescrypto.bio import Membio
 from ctypescrypto.pkey import PKey
 from ctypescrypto.oid import Oid
 from ctypescrypto.exception import LibCryptoError
 from ctypescrypto import libcrypto
+
+__all__ = ['X509Error','X509Name','X509Store','StackOfX509']
+# X509_extlist is not exported yet, because is not implemented 
 class X509Error(LibCryptoError):
 	"""
 	Exception, generated when some openssl function fail
@@ -16,6 +29,10 @@ class X509Name:
 	"""
 	Class which represents X.509 distinguished name - typically 
 	a certificate subject name or an issuer name.
+
+	Now used only to represent information, extracted from the
+	certificate. Potentially can be also used to build DN when creating
+	certificate signing request
 	"""
 	# XN_FLAG_SEP_COMMA_PLUS & ASN1_STRFLG_UTF8_CONVERT
 	PRINT_FLAG=0x10010
@@ -170,10 +187,10 @@ class X509:
 		@param chain - list of X509 objects to add into verification
 			context.These objects are untrusted, but can be used to
 			build certificate chain up to trusted object in the store
-		@param key - PKey object
-		parameters stora and key are mutually exclusive. If neither is specified, attempts to verify
+		@param key - PKey object with open key to validate signature
 		
-		itself as self-signed certificate
+		parameters store and key are mutually exclusive. If neither 
+		is specified, attempts to verify self as self-signed certificate
 		"""
 		if store is not None and key is not None:
 			raise X509Error("key and store cannot be specified simultaneously")
@@ -234,11 +251,14 @@ class X509:
 		return libcrypto.X509_check_ca(self.cert)>0
 class X509Store:
 	"""
-		Represents trusted certificate store. Can be used to lookup CA certificates to verify
+		Represents trusted certificate store. Can be used to lookup CA 
+		certificates to verify
 
-		@param file - file with several certificates and crls to load into store
+		@param file - file with several certificates and crls 
+				to load into store
 		@param dir - hashed directory with certificates and crls
-		@param default - if true, default verify location (directory) is installed
+		@param default - if true, default verify location (directory) 
+			is installed
 
 	"""
 	def __init__(self,file=None,dir=None,default=False):

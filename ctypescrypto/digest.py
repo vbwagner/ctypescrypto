@@ -19,6 +19,7 @@ from ctypescrypto.exception import LibCryptoError
 from ctypescrypto.oid import Oid
 DIGEST_ALGORITHMS = ("MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512")
 
+__all__ = ['DigestError','Digest','DigestType','new']
 
 class DigestError(LibCryptoError):
 	pass
