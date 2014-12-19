@@ -8,14 +8,70 @@ such as CMS, OCSP and timestamps.
 
 
 
-from ctypes import c_void_p,create_string_buffer,c_long,c_int,POINTER,c_char_p
+from ctypes import c_void_p,create_string_buffer,c_long,c_int,POINTER,c_char_p,Structure,cast
 from ctypescrypto.bio import Membio
 from ctypescrypto.pkey import PKey
 from ctypescrypto.oid import Oid
 from ctypescrypto.exception import LibCryptoError
 from ctypescrypto import libcrypto
+from datetime import datetime
+try:
+	from pytz import utc
+except ImportError:
+	from datetime import timedelta
+	ZERO=timedelta(0)
+	class UTC(datetime.tzinfo):
+		"""tzinfo object for UTC. 
+			If no pytz is available, we would use it.
+		"""
+
+		def utcoffset(self, dt):
+			return ZERO
+
+		def tzname(self, dt):
+			return "UTC"
+
+		def dst(self, dt):
+			return ZERO
+
+	utc=UTC()
 
 __all__ = ['X509Error','X509Name','X509Store','StackOfX509']
+
+class _validity(Structure):
+	""" ctypes representation of X509_VAL structure 
+		needed to access certificate validity period, because openssl
+		doesn't provide fuctions for it - only macros
+	"""
+	_fields_ = 	[('notBefore',c_void_p),('notAfter',c_void_p)]
+
+class _cinf(Structure):
+	""" ctypes representtion of X509_CINF structure 
+	    neede to access certificate data, which are accessable only
+		via macros
+	"""
+	_fields_ = [('version',c_void_p),
+		('serialNumber',c_void_p),
+		('sign_alg',c_void_p),
+		('issuer',c_void_p),
+		('validity',POINTER(_validity)),
+		('subject',c_void_p),
+		('pubkey',c_void_p),
+		]
+
+class _x509(Structure):
+	"""
+	ctypes represntation of X509 structure needed
+	to access certificate data which are accesable only via
+	macros, not functions
+	"""
+	_fields_ = [('cert_info',POINTER(_cinf)),
+				('sig_alg',c_void_p),
+				('signature',c_void_p),
+				# There are a lot of parsed extension fields there
+				]
+_px509 = POINTER(_x509)
+
 # X509_extlist is not exported yet, because is not implemented 
 class X509Error(LibCryptoError):
 	"""
@@ -233,16 +289,30 @@ class X509:
 		b=Membio()
 		libcrypto.i2a_ASN1_INTEGER(b.bio,asnint)
 		return int(str(b),16)
+	@property 
+	def version(self):
+		""" certificate version as integer. Really certificate stores 0 for
+		version 1 and 2 for version 3, but we return 1 and 3 """
+		asn1int=cast(self.cert,_px509)[0].cert_info[0].version
+		return libcrypto.ASN1_INTEGER_get(asn1int)+1
 	@property
 	def startDate(self):
 		""" Certificate validity period start date """
 		# Need deep poke into certificate structure (x)->cert_info->validity->notBefore	
-		raise NotImplementedError
+		global utc
+		asn1date=cast(self.cert,_px509)[0].cert_info[0].validity[0].notBefore
+		b=Membio()
+		libcrypto.ASN1_TIME_print(b.bio,asn1date)
+		return datetime.strptime(str(b),"%b %d %H:%M:%S %Y %Z").replace(tzinfo=utc)
 	@property
 	def endDate(self):
 		""" Certificate validity period end date """
 		# Need deep poke into certificate structure (x)->cert_info->validity->notAfter
-		raise NotImplementedError
+		global utc
+		asn1date=cast(self.cert,_px509)[0].cert_info[0].validity[0].notAfter
+		b=Membio()
+		libcrypto.ASN1_TIME_print(b.bio,asn1date)
+		return datetime.strptime(str(b),"%b %d %H:%M:%S %Y %Z").replace(tzinfo=utc)
 	def extensions(self):
 		""" Returns list of extensions """
 		raise NotImplementedError
@@ -392,6 +462,9 @@ class StackOfX509:
 		libcrypto.sk_push(self.ptr,libcrypto.X509_dup(value.cert))
 libcrypto.i2a_ASN1_INTEGER.argtypes=(c_void_p,c_void_p)
 libcrypto.ASN1_STRING_print_ex.argtypes=(c_void_p,c_void_p,c_long)
+libcrypto.ASN1_TIME_print.argtypes=(c_void_p,c_void_p)
+libcrypto.ASN1_INTEGER_get.argtypes=(c_void_p,)
+libcrypto.ASN1_INTEGER_get.restype=c_long
 libcrypto.X509_get_serialNumber.argtypes=(c_void_p,)
 libcrypto.X509_get_serialNumber.restype=c_void_p
 libcrypto.X509_NAME_ENTRY_get_object.restype=c_void_p
@@ -406,3 +479,4 @@ libcrypto.X509_LOOKUP_file.restype=c_void_p
 libcrypto.X509_LOOKUP_hash_dir.restype=c_void_p
 libcrypto.X509_LOOKUP_ctrl.restype=c_int
 libcrypto.X509_LOOKUP_ctrl.argtypes=(c_void_p,c_int,c_char_p,c_long,POINTER(c_char_p))
+

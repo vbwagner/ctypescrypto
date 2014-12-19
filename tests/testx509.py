@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
-from ctypescrypto.x509 import X509,X509Store
+from ctypescrypto.x509 import X509,X509Store,utc
 from ctypescrypto.oid import Oid
 from tempfile import NamedTemporaryFile
+import datetime
 import unittest
 
 
@@ -124,6 +125,12 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 		c=X509(self.cert1)
 		self.assertEqual(c.subject[Oid("C")],"RU")
 		self.assertEqual(c.subject[Oid("L")],u'\u041c\u043e\u0441\u043a\u0432\u0430')
+	def test_notBefore(self):
+		c=X509(self.cert1)
+		self.assertEqual(c.startDate,datetime.datetime(2014,10,26,19,07,17,0,utc))
+	def test_notAfter(self):
+		c=X509(self.cert1)
+		self.assertEqual(c.endDate,datetime.datetime(2024,10,23,19,7,17,0,utc))
 	def test_namecomp(self):
 		c=X509(self.cert1)
 		ca=X509(self.ca_cert)
@@ -133,6 +140,9 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 	def test_serial(self):
 		c=X509(self.cert1)
 		self.assertEqual(c.serial,0xDF448E69DADC927CL)
+	def test_version(self):
+		c=X509(self.cert1)
+		self.assertEqual(c.version,3)
 	def test_ca_cert(self):
 		ca=X509(self.ca_cert)
 		self.assertTrue(ca.check_ca())
