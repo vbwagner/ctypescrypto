@@ -18,9 +18,9 @@ from datetime import datetime
 try:
 	from pytz import utc
 except ImportError:
-	from datetime import timedelta
+	from datetime import timedelta,tzinfo
 	ZERO=timedelta(0)
-	class UTC(datetime.tzinfo):
+	class UTC(tzinfo):
 		"""tzinfo object for UTC. 
 			If no pytz is available, we would use it.
 		"""
