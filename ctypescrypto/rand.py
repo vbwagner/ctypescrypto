@@ -17,11 +17,11 @@ def bytes( num, check_result=False):
 	"""
 
 	if num <= 0 :
-		raise ValueError, "'num' should be > 0"
+		raise ValueError("'num' should be > 0")
 	buffer = create_string_buffer(num)
 	result = libcrypto.RAND_bytes(buffer, num) 
 	if check_result and result == 0:
-		raise RandError, "Random Number Generator not seeded sufficiently"
+		raise RandError("Random Number Generator not seeded sufficiently")
 	return buffer.raw[:num]
 
 def pseudo_bytes(num):
@@ -34,7 +34,7 @@ def pseudo_bytes(num):
 		not for key generation etc.
 	"""
 	if num <= 0 :
-		raise ValueError, "'num' should be > 0"
+		raise ValueError("'num' should be > 0")
 	buffer = create_string_buffer(num)
 	libcrypto.RAND_pseudo_bytes(buffer, num)
 	return buffer.raw[:num]
@@ -46,7 +46,7 @@ def seed(data, entropy=None):
 		value estimating amount of entropy  in the data (in bytes).
 	"""
 	if type(data) != type(""):
-		raise TypeError, "A string is expected"
+		raise TypeError("A string is expected")
 	ptr = c_char_p(data)
 	size = len(data)
 	if entropy is None:

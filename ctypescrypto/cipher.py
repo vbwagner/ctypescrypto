@@ -42,7 +42,7 @@ class CipherType:
 		"""
 		self.cipher = libcrypto.EVP_get_cipherbyname(cipher_name)
 		if self.cipher is None:
-			raise CipherError, "Unknown cipher: %s" % cipher_name
+			raise CipherError("Unknown cipher: %s" % cipher_name)
 
 	def __del__(self):
 		pass
@@ -113,7 +113,7 @@ class Cipher:
 		iv_ptr = c_char_p(iv)
 		self.ctx = libcrypto.EVP_CIPHER_CTX_new()
 		if self.ctx == 0:
-			raise CipherError, "Unable to create cipher context"
+			raise CipherError("Unable to create cipher context")
 		self.encrypt = encrypt
 		if encrypt: 
 			enc = 1
@@ -137,7 +137,7 @@ class Cipher:
 			result = libcrypto.EVP_CipherInit_ex(self.ctx, cipher_type.cipher, None, key_ptr, iv_ptr, c_int(enc))
 		if result == 0:
 			self._clean_ctx()
-			raise CipherError, "Unable to initialize cipher"
+			raise CipherError("Unable to initialize cipher")
 		self.cipher_type = cipher_type
 		self.block_size = self.cipher_type.block_size()
 		self.cipher_finalized = False
@@ -168,9 +168,9 @@ class Cipher:
 			called
 		"""
 		if self.cipher_finalized :
-			raise CipherError, "No updates allowed"
+			raise CipherError("No updates allowed")
 		if type(data) != type(""):
-			raise TypeError, "A string is expected"
+			raise TypeError("A string is expected")
 		if len(data) <= 0:
 			return ""
 		outbuf=create_string_buffer(self.block_size+len(data))
@@ -190,14 +190,14 @@ class Cipher:
 			state, they would be processed and returned.
 		"""
 		if self.cipher_finalized :
-			raise CipherError, "Cipher operation is already completed"
+			raise CipherError("Cipher operation is already completed")
 		outbuf=create_string_buffer(self.block_size)
 		self.cipher_finalized = True
 		outlen=c_int(0)
 		result = libcrypto.EVP_CipherFinal_ex(self.ctx,outbuf , byref(outlen))
 		if result == 0:
 			self._clean_ctx()
-			raise CipherError, "Unable to finalize cipher"
+			raise CipherError("Unable to finalize cipher")
 		if outlen.value>0:
 			return outbuf.raw[:outlen.value]
 		else:

@@ -45,7 +45,7 @@ class DigestType:
 		self.digest_name = digest_name
 		self.digest = libcrypto.EVP_get_digestbyname(self.digest_name)
 		if self.digest is None:
-			raise DigestError, "Unknown digest: %s" % self.digest_name
+			raise DigestError("Unknown digest: %s" % self.digest_name)
 
 	def __del__(self):
 		pass
@@ -69,11 +69,11 @@ class Digest:
 		self._clean_ctx()
 		self.ctx = libcrypto.EVP_MD_CTX_create()
 		if self.ctx == 0:
-			raise DigestError, "Unable to create digest context"
+			raise DigestError("Unable to create digest context")
 		result = libcrypto.EVP_DigestInit_ex(self.ctx, digest_type.digest, None)
 		if result == 0:
 			self._clean_ctx()
-			raise DigestError, "Unable to initialize digest"
+			raise DigestError("Unable to initialize digest")
 		self.digest_type = digest_type
 		self.digest_size = self.digest_type.digest_size()
 		self.block_size = self.digest_type.block_size()
@@ -90,9 +90,9 @@ class Digest:
 					otherwise only first length bytes
 		"""
 		if self.digest_finalized:
-			raise DigestError, "No updates allowed"
+			raise DigestError("No updates allowed")
 		if type(data) != type(""):
-			raise TypeError, "A string is expected"
+			raise TypeError("A string is expected")
 		if length is None:
 			length=len(data)
 		elif length> len(data):
@@ -114,7 +114,7 @@ class Digest:
 		length = c_long(0)
 		result = libcrypto.EVP_DigestFinal_ex(self.ctx, self.digest_out, byref(length))
 		if result != 1 :
-			raise DigestError, "Unable to finalize digest"
+			raise DigestError("Unable to finalize digest")
 		self.digest_finalized = True
 		return self.digest_out.raw[:self.digest_size]
 	def copy(self):
