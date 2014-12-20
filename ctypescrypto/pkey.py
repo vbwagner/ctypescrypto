@@ -30,7 +30,7 @@ def password_callback(buf,length,rwflag,u):
 
 _cb=CALLBACK_FUNC(password_callback)
 
-class PKey:
+class PKey(object):
 	def __init__(self,ptr=None,privkey=None,pubkey=None,format="PEM",cansign=False,password=None):
 		if not ptr is None:
 			self.key=ptr

@@ -83,7 +83,7 @@ class X509Error(LibCryptoError):
 	pass
 
 
-class X509Name:
+class X509Name(object):
 	"""
 	Class which represents X.509 distinguished name - typically 
 	a certificate subject name or an issuer name.
@@ -376,7 +376,7 @@ class X509(object):
 	def check_ca(self):
 		""" Returns True if certificate is CA certificate """
 		return libcrypto.X509_check_ca(self.cert)>0
-class X509Store:
+class X509Store(object):
 	"""
 		Represents trusted certificate store. Can be used to lookup CA 
 		certificates to verify
@@ -467,7 +467,7 @@ class X509Store:
 		else:
 			raise TypeError("datetime.date, datetime.datetime or integer is required as time argument")
 		raise NotImplementedError
-class StackOfX509:
+class StackOfX509(object):
 	"""
 	Implements OpenSSL STACK_OF(X509) object.
 	It looks much like python container types

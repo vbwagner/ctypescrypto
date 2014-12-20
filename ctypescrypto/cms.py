@@ -68,7 +68,7 @@ def CMS(data,format="PEM"):
 	else:
 		raise NotImplementedError("cannot handle "+typeoid.shortname())
 
-class CMSBase: 
+class CMSBase(object): 
 	"""
 	Common ancessor for all CMS types.
 	Implements serializatio/deserialization

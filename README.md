@@ -11,9 +11,21 @@ most recent version can be checked out from
 
 https://github.com/vbwagner/ctypescrypto.git
 
-It is aimed to provide Python interface to OpenSSL libcrypto functions.
-All the objects in this library are just wrappers around some OpenSSL
-data structures and groups of functions.
+Rationale
+---------
+
+Why have yet another crypto extension for Python? There is pyopenssl,
+m2crypto, hashlib in the standard library and many more.
+
+But most of these extension implement interfaces to particular set of
+cryptoalgorthms. This extension takes an another approach — it uses
+algorithm-agnostic EVP layer whenever possible, and so support any
+algorithms which are supported by underlying library, even this
+algorithms are implemented in the loadable modules (engines). Algorithms
+which you've just added to library, should be supported too.
+
+Also, this extension takes some care of correctly converting textual
+information from ASN.1 structures into unicode.
 
 
 
@@ -56,6 +68,9 @@ sign data, derive shared key and verify signatures.
 This is quite low-level object, which can be used to implement some
 non-standard protocols and operations.
 
+It is possible to extract public key from the certificate as PKey
+object (see below).
+
 Additional module **ctypescrypto.ec** allows to create **PKey** objects
 with elliptic curve keys from just raw secret key as byte buffer or
 python big integer.
@@ -78,7 +93,9 @@ names, public key (of course it is PKey object described above) and
 serial number. Subject and issuer names can be indexed by OIDs or by
 position of field. Unicode in the names is supported.
 
-Support for visualising certificate extensions is missing for now.
+Support for visualising certificate extensions is minimal for now.
+Extension object can be converted into string, extension Oid can be
+retrieved and critical flag is checked.
 
 **StackOfX509** implements collection of certificates, necessary for
 some operations with CMS and certificate verification.
@@ -152,11 +169,10 @@ Test suite is fairly incomplete. Contributions are welcome.
 Possible future enhancements
 ----------------------------
 
-1. Certificate extension support
-2. Create and signing of the certificate requests (PKCS#10)
-3. Parsing and analyzing CRLs
-4. OCSP request creation and response parsing
-5. Timestamping ([RFC 3161](http://www.ietf.org/rfc/rfc3161.txt))
+1. Create and signing of the certificate requests (PKCS#10)
+2. Parsing and analyzing CRLs
+3. OCSP request creation and response parsing
+4. Timestamping ([RFC 3161](http://www.ietf.org/rfc/rfc3161.txt))
 support.
 6. MAC support. Few people know that there is more MACs than just HMAC,
 and even fewer, that OpenSSL supports them.

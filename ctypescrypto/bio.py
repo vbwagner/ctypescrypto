@@ -3,7 +3,7 @@ Interface to OpenSSL BIO library
 """
 from ctypescrypto import libcrypto
 from ctypes import c_char_p, c_void_p, c_int, string_at, c_long,POINTER,byref, create_string_buffer
-class Membio:
+class Membio(object):
 	""" 
 		Provides interface to OpenSSL memory bios 
 		use str() or unicode() to get contents of writable bio

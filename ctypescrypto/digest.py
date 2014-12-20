@@ -32,7 +32,7 @@ def new(algname):
 	md=DigestType(algname)
 	return Digest(md)
 
-class DigestType:
+class DigestType(object):
 	"""
 		
 		Represents EVP_MD object - constant structure which describes
@@ -57,7 +57,7 @@ class DigestType:
 	def oid(self):
 		return Oid(libcrypto.EVP_MD_type(self.digest))
 
-class Digest:
+class Digest(object):
 	"""
 		Represents EVP_MD_CTX object which actually used to calculate
 		digests.
