@@ -85,8 +85,6 @@ class TestEncryptDecrypt(unittest.TestCase):
 		c=cipher.new("bf-ofb",encryptkey,iv=iv)
 		ciphertext=c.update(data)+c.finish()
 		decryptkey=encryptkey[0:5]+encryptkey[5:]
-		with open("cipher.txt","w") as f:
-			f.write(repr(ciphertext)+"\n")
 		d=cipher.new("bf-ofb",decryptkey,encrypt=False,iv=iv)
 		deciph=d.update(ciphertext)+d.finish()
 		self.assertEqual(deciph,data)
