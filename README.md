@@ -69,49 +69,52 @@ or DER certificate) and object **X509Store** which is a store of trusted
 CA certificates which can be used to high-level signature verifications
 (i.e. in PKCS7/CMS messages).
 
+There is no support for creating and signing certificates, i.e. to
+perform Certificate Authority functions. This library for now focuses on
+cryptography user functionality. 
+
 Certificate has properties corresponding to its subject and issuer
 names, public key (of course it is PKey object described above) and
 serial number. Subject and issuer names can be indexed by OIDs or by
 position of field. Unicode in the names is supported.
 
-There is no support for certificate validity time yet.
+Support for visualising certificate extensions is missing for now.
 
-**StackOfX509** implements collection of certificates, neccessary for
+**StackOfX509** implements collection of certificates, necessary for
 some operations with CMS and certificate verification.
 
 CMS documents
 -------------
 
-There is basic constructor function **CMS()**, which parses PEM or der
+There is basic factory function **CMS()**, which parses PEM or der
 representation of cryptographic message and generates appropriate
 object. There are **SignedData**, **EnvelopedData** and
-**EncryptedData** clases. Each class has static method **create**
+**EncryptedData** classes. Each class has static method **create**
 allowing to create this subtype of message from raw data and appropriate
 keys and certificates.
 
 **SignedData** has **verify()** method. **EnvelopedData** and
 **EncryptedData** - **decrypt** method.
 
-Unfortunatly, **SignedAndEnvelopedData** seems to be unsupported in
+Unfortunately, **SignedAndEnvelopedData** seems to be unsupported in
 libcrypto as of version 1.0.1 of OpenSSL.
 
 PBKDF2
 ------
 
-Provices interface to password based keyderivation function
+Provides interface to password based key derivation function
 Interface slightly differs from the **hashlib.pbkdf2_hmac** function,
 which have appeared in Python 2.7.8 but functionality is just same,
 although OpenSSL implementation might be faster.
 
 
 
-
 OID database
 ------------
 
-OpenSSL conteins internal object identifiers (OID) database. Each OID
+OpenSSL contains internal object identifiers (OID) database. Each OID
 have apart from dotted-decimal representation long name, short name and
-numeric identifer. Module **ctypescrypto.oid** provides interface to the
+numeric identifier. Module **ctypescrypto.oid** provides interface to the
 database. **Oid** objects store numeric identifier internally and can
 return both long and short name and dotted-decimal representation.
 
@@ -119,7 +122,7 @@ BIO library
 -----------
 
 OpenSSL contain BIO (basic input-output) abstraction. And all object
-serialization/deserialization use this library. Also human-readble
+serialization/deserialization use this library. Also human-readable
 representation of  ASN.1 structures use this library extensively. So,
 we've to develop python object which allow to read from python string
 via BIO abstraction or write to buffer, which can be returned as python
@@ -136,12 +139,24 @@ available in the Python
 Engine support
 --------------
 
-There is just one function **ctypescrypt.engine.set_default**. which loads 
+There is just one function **ctypescrypt.engine.set_default**, which loads 
 specified engine by id and makes it default for all algorithms,
 supported by it. It is enough for me to use Russian national
-cryptographic algoritms, provided by **gost** engine.
+cryptographic algorithms, provided by **gost** engine.
 
 Test Suite
 ----------
 
 Test suite is fairly incomplete. Contributions are welcome.
+
+Possible future enhancements
+----------------------------
+
+1. Certificate extension support
+2. Create and signing of the certificate requests (PKCS#10)
+3. Parsing and analyzing CRLs
+4. OCSP request creation and response parsing
+5. Timestamping ([RFC 3161](http://www.ietf.org/rfc/rfc3161.txt))
+support.
+6. MAC support. Few people know that there is more MACs than just HMAC,
+and even fewer, that OpenSSL supports them.
