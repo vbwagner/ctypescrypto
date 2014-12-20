@@ -180,3 +180,5 @@ Possible future enhancements
 support.
 6. MAC support. Few people know that there is more MACs than just HMAC,
 and even fewer, that OpenSSL supports them.
+
+  vim: spelllang=en tw=72
