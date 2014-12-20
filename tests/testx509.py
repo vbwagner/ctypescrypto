@@ -148,6 +148,40 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 		self.assertTrue(ca.check_ca())
 		notca=X509(self.cert1)
 		self.assertFalse(notca.check_ca())
+	def test_extension_count(self):
+		cert=X509(self.cert1)
+		self.assertTrue(len(cert.extensions),4)
+		ca_cert=X509(self.ca_cert)
+		self.assertEqual(len(ca_cert.extensions),3)
+	def test_extension_outofrange(self):
+		cert=X509(self.cert1)
+		with self.assertRaises(IndexError):
+			cert.extensions[4]
+		with self.assertRaises(IndexError):
+			cert.extensions[-1]
+	def test_extension_oid(self):
+		cert=X509(self.cert1)
+		ext=cert.extensions[0]
+		ext_id=ext.oid
+		self.assertTrue(isinstance(ext_id,Oid))
+		self.assertEqual(ext_id,Oid('basicConstraints'))
+	def text_extension_text(self):
+		cert=X509(self.cert1)
+		ext=cert.extensions[0]
+		self.assertEqual(str(ext),'CA:FALSE')
+	def test_extenson_find(self):
+		cert=X509(self.cert1)
+		exts=cert.extensions.find(Oid('subjectAltName'))
+		self.assertEqual(len(exts),1)
+		self.assertEqual(exts[0].oid,Oid('subjectAltName'))
+	def test_extenson_critical(self):
+		cert=X509(self.digicert_cert)
+		crit_exts=cert.extensions.find_critical()
+		self.assertEqual(len(crit_exts),2)
+		other_exts=cert.extensions.find_critical(False)
+		self.assertEqual(len(crit_exts)+len(other_exts),len(cert.extensions))
+		self.assertEqual(crit_exts[0].critical,True)
+		self.assertEqual(other_exts[0].critical,False)
 	def test_verify_by_key(self):
 		ca=X509(self.ca_cert)
 		pubkey=ca.pubkey
@@ -181,7 +215,6 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 		# signed by some commercial CA should be rejected too
 		self.assertFalse(gitcert.verify(store))
 		trusted.close()
-		pass
 	def test_verify_by_dirstore(self):
 		pass
 if __name__ == '__main__':

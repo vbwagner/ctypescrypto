@@ -12,7 +12,7 @@ from ctypes import c_char_p, c_void_p, c_int, create_string_buffer
 
 __all__ = ['Oid','create','cleanup']
 
-class Oid:
+class Oid(object):
 	"""
 		Represents an OID. It can be consturucted by textual
 		representation like Oid("commonName") or Oid("CN"),
@@ -58,11 +58,25 @@ class Oid:
 		" Returns logn name if any "
 		return	libcrypto.OBJ_nid2ln(self.nid)
 	def dotted(self):
-		" Returns dotted-decimal reperesntation "
+		" Returns dotted-decimal reperesentation "
 		obj=libcrypto.OBJ_nid2obj(self.nid)
 		buf=create_string_buffer(256)
 		libcrypto.OBJ_obj2txt(buf,256,obj,1)
 		return buf.value
+	@staticmethod
+	def fromobj(obj):
+		"""
+		Creates an OID object from the pointer to ASN1_OBJECT c structure.
+		Strictly for internal use
+		"""
+		nid=libcrypto.OBJ_obj2nid(obj)
+		if nid==0:
+			buf=create_string_buffer(80)
+			l=libcrypto.OBJ_obj2txt(buf,80,obj,1)
+			oid=create(buf[0:l],buf[0:l],buf[0:l])
+		else:
+			oid=Oid(nid)
+		return oid
 
 def create(dotted,shortname,longname):
 	"""
