@@ -164,15 +164,19 @@ cryptographic algorithms, provided by **gost** engine.
 Test Suite
 ----------
 
+Tests can be run using
+
+    python setup.py test
+
 Test suite is fairly incomplete. Contributions are welcome.
 
 Possible future enhancements
 ----------------------------
 
-1. Create and signing of the certificate requests (PKCS#10)
+1. Creation and signing of the certificate requests (PKCS#10)
 2. Parsing and analyzing CRLs
-3. OCSP request creation and response parsing
-4. Timestamping ([RFC 3161](http://www.ietf.org/rfc/rfc3161.txt))
+3. OCSP ([RFC 6960[](http://tools.ietf.org/html/rfc6960))request creation and response parsing
+4. Timestamping ([RFC 3161](http://tools.ietf.org/html/rfc3161))
 support.
 6. MAC support. Few people know that there is more MACs than just HMAC,
 and even fewer, that OpenSSL supports them.
