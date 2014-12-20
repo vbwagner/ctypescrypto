@@ -33,7 +33,7 @@ class MyTests(distutils.cmd.Command):
 
 setup(
 	name="ctypescrypto",
-	version="0.2.0",
+	version="0.2.4",
 	description="CTypes-based interface for some OpenSSL libcrypto features",
 	author="Victor Wagner",
 	author_email="vitus@wagner.pp.ru",

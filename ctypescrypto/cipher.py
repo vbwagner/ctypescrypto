@@ -12,6 +12,8 @@ CIPHER_MODES = ("STREAM","ECB","CBC", "CFB", "OFB", "CTR","GCM")
 
 #
 
+__all__ = ['CipherError','new','Cipher','CipherType']
+
 class CipherError(LibCryptoError):
 	pass
 

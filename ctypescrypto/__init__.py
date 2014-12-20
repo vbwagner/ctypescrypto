@@ -3,6 +3,7 @@
 
 """
 
+
 from ctypes import CDLL,c_char_p
 
 def config(filename=None):
@@ -11,6 +12,8 @@ def config(filename=None):
 		(compiled in) one
 	"""
 	libcrypto.OPENSSL_config(filename)
+
+__all__ = ['bio','cipher','cms','config','digest','ec','engine','exception','oid','pbkdf2','pkey','rand','x509']
 
 libcrypto = CDLL("libcrypto.so.1.0.0")
 libcrypto.OPENSSL_config.argtypes=(c_char_p,)

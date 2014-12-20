@@ -5,6 +5,8 @@ from ctypescrypto.pkey import PKey, PKeyError
 from ctypes import c_void_p,c_char_p,c_int,byref
 from ctypescrypto import libcrypto
 
+__all__ = [ 'create']
+
 def create(curve,data):
 	"""
 		Creates EC keypair from the just secret key and curve name

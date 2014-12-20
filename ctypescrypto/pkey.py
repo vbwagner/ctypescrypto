@@ -10,6 +10,8 @@ from ctypescrypto import libcrypto
 from ctypescrypto.exception import LibCryptoError,clear_err_stack
 from ctypescrypto.bio import Membio
 import sys
+
+__all__ = ['PKeyError','password_callback','PKey']
 class PKeyError(LibCryptoError):
 	pass
 

@@ -7,6 +7,8 @@ from ctypes import c_char_p,c_int, c_void_p, create_string_buffer
 from ctypescrypto import libcrypto
 from ctypescrypto.digest import DigestType
 
+__all__ = ['pbkdf2']
+
 def pbkdf2(password,salt,outlen,digesttype="sha1",iterations=2000):
 	"""
 		Interface to PKCS5_PBKDF2_HMAC function

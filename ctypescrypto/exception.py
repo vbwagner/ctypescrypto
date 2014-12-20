@@ -4,6 +4,9 @@ Exception which extracts libcrypto error information
 from ctypes import *
 from ctypescrypto import libcrypto
 strings_loaded=False
+
+__all__ = ['LibCryptoError','clear_err_stack']
+
 class LibCryptoError(Exception):
 	"""
 		Exception for libcrypto errors. Adds all the info, which can be

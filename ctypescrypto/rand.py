@@ -6,6 +6,8 @@ from ctypes import create_string_buffer, c_char_p, c_int, c_double
 from ctypescrypto import libcrypto
 from ctypescrypto.exception import LibCryptoError
 
+__all__ = ['RandError','bytes','pseudo_bytes','seed','status']
+
 class RandError(LibCryptoError):
 	pass
 
