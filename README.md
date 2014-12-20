@@ -175,7 +175,7 @@ Possible future enhancements
 
 1. Creation and signing of the certificate requests (PKCS#10)
 2. Parsing and analyzing CRLs
-3. OCSP ([RFC 6960[](http://tools.ietf.org/html/rfc6960))request creation and response parsing
+3. OCSP ([RFC 6960](http://tools.ietf.org/html/rfc6960))request creation and response parsing
 4. Timestamping ([RFC 3161](http://tools.ietf.org/html/rfc3161))
 support.
 6. MAC support. Few people know that there is more MACs than just HMAC,
