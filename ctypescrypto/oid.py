@@ -29,11 +29,13 @@ class Oid(object):
 
 	def __init__(self,value):
 		" Object constuctor. Accepts string or integer"
-		if type(value) == type(""):
+		if isinstance(value,unicode):
+			value=value.encode('ascii')
+		if isinstance(value,str):
 			self.nid=libcrypto.OBJ_txt2nid(value)
 			if self.nid==0:
 				raise ValueError("Cannot find object %s in the database"%(value))
-		elif type(value) == type(0):
+		elif isinstance(value,(int,long)):
 			cn=libcrypto.OBJ_nid2sn(value)
 			if cn is None:
 				raise ValueError("No such nid %d in the database"%(value))

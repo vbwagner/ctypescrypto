@@ -6,8 +6,22 @@ class TestRead(unittest.TestCase):
 		s="A quick brown fox jumps over a lazy dog"
 		bio=Membio(s)
 		data=bio.read()
-		del bio
 		self.assertEqual(data,s)
+		data2=bio.read()
+		self.assertEqual(data2,"")
+		del bio
+	def test_readwithlen(self):
+		s="A quick brown fox jumps over a lazy dog"
+		bio=Membio(s)
+		data=bio.read(len(s))
+		self.assertEqual(data,s)
+		data2=bio.read(5)
+		self.assertEqual(data2,"")
+	def test_readwrongtype(self):
+		s="A quick brown fox jumps over a lazy dog"
+		bio=Membio(s)
+		with self.assertRaises(TypeError):
+			data=bio.read("5")
 	def test_reset(self):
 		s="A quick brown fox jumps over a lazy dog"
 		bio=Membio(s)

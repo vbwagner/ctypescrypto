@@ -47,7 +47,7 @@ def seed(data, entropy=None):
 		If entropy is not None, it should be floating point(double)
 		value estimating amount of entropy  in the data (in bytes).
 	"""
-	if type(data) != type(""):
+	if not isinstance(data,str):
 		raise TypeError("A string is expected")
 	ptr = c_char_p(data)
 	size = len(data)

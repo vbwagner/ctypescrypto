@@ -42,7 +42,7 @@ class Membio(object):
 		@param length - if specifed, limits amount of data read. If not BIO is read until end of buffer
 		"""
 		if not length is None:
-			if type(length)!=type(0):
+			if not isinstance(length,(int,long)):
 				raise TypeError("length to read should be number")
 			buf=create_string_buffer(length)
 			readbytes=libcrypto.BIO_read(self.bio,buf,length)

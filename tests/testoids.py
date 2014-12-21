@@ -24,12 +24,18 @@ class TestStandard(unittest.TestCase):
 		o=Oid("2.5.4.3")
 		x=Oid(o.nid)
 		self.assertEqual(o.nid,x.nid)
+	def test_fromunicode(self):
+		o=Oid(u'commonName')
+		self.assertEqual(o.shortname(),'CN')
 	def test_wrongoid(self):
 		with self.assertRaises(ValueError):
 			o=Oid("1.2.3.4.5.6.7.8.10.111.1111")
 	def test_wrongname(self):
 		with self.assertRaises(ValueError):
 			o=Oid("No such oid in the database")
+	def test_wrongnid(self):
+		with self.assertRaises(ValueError):
+			o=Oid(9999999)
 	def test_wrongtype(self):
 		with self.assertRaises(TypeError):
 			o=Oid([2,5,3,4])

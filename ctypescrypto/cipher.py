@@ -171,7 +171,7 @@ class Cipher:
 		"""
 		if self.cipher_finalized :
 			raise CipherError("No updates allowed")
-		if type(data) != type(""):
+		if not isinstance(data,str):
 			raise TypeError("A string is expected")
 		if len(data) <= 0:
 			return ""

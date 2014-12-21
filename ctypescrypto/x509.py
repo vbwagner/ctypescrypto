@@ -148,7 +148,7 @@ class X509Name(object):
 			# Return first matching field
 			idx=libcrypto.X509_NAME_get_index_by_NID(self.ptr,key.nid,-1)
 			if idx<0:
-				raise KeyError("Key not found "+repr(Oid))
+				raise KeyError("Key not found "+str(Oid))
 			entry=libcrypto.X509_NAME_get_entry(self.ptr,idx)
 			s=libcrypto.X509_NAME_ENTRY_get_data(entry)
 			b=Membio()
@@ -168,6 +168,8 @@ class X509Name(object):
 	def __setitem__(self,key,val):
 		if not self.writable:
 			raise ValueError("Attempt to modify constant X509 object")
+		else:
+			raise NotImplementedError
 
 class _x509_ext(Structure):
 	""" Represens C structure X509_EXTENSION """
@@ -191,7 +193,6 @@ class X509_EXT(object):
 	def __str__(self):
 		b=Membio()
 		libcrypto.X509V3_EXT_print(b.bio,self.ptr,0x20010,0)
-		libcrypto.X509V3_EXT_print.argtypes=(c_void_p,POINTER(_x509_ext),c_long,c_int)
 		return str(b)
 	def __unicode__(self):
 		b=Membio()
@@ -547,3 +548,4 @@ libcrypto.X509_EXTENSION_dup.restype=POINTER(_x509_ext)
 libcrypto.X509V3_EXT_print.argtypes=(c_void_p,POINTER(_x509_ext),c_long,c_int)
 libcrypto.X509_get_ext.restype=c_void_p
 libcrypto.X509_get_ext.argtypes=(c_void_p,c_int)
+libcrypto.X509V3_EXT_print.argtypes=(c_void_p,POINTER(_x509_ext),c_long,c_int)

@@ -118,6 +118,12 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 	def test_subject(self):
 		c=X509(self.cert1)
 		self.assertEqual(unicode(c.subject),u'C=RU,ST=Москва,L=Москва,O=Частное лицо,CN=Виктор Вагнер')
+	def test_subject_str(self):
+		c=X509(self.cert1)
+		self.assertEqual(str(c.subject),b'C=RU,ST=\\D0\\9C\\D0\\BE\\D1\\81\\D0\\BA\\D0\\B2\\D0\\B0,L=\\D0\\9C\\D0\\BE\\D1\\81\\D0\\BA\\D0\\B2\\D0\\B0,O=\\D0\\A7\\D0\\B0\\D1\\81\\D1\\82\\D0\\BD\\D0\\BE\\D0\\B5 \\D0\\BB\\D0\\B8\\D1\\86\\D0\\BE,CN=\\D0\\92\\D0\\B8\\D0\\BA\\D1\\82\\D0\\BE\\D1\\80 \\D0\\92\\D0\\B0\\D0\\B3\\D0\\BD\\D0\\B5\\D1\\80')
+	def test_subject_len(self):
+		c=X509(self.cert1)
+		self.assertEqual(len(c.subject),5)
 	def test_issuer(self):
 		c=X509(self.cert1)
 		self.assertEqual(unicode(c.issuer),u'C=RU,ST=Москва,O=Удостоверяющий центр,CN=Виктор Вагнер,emailAddress=vitus@wagner.pp.ru')
@@ -125,6 +131,19 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 		c=X509(self.cert1)
 		self.assertEqual(c.subject[Oid("C")],"RU")
 		self.assertEqual(c.subject[Oid("L")],u'\u041c\u043e\u0441\u043a\u0432\u0430')
+	def test_subjectbadsubfield(self):
+		c=X509(self.cert1)
+		with self.assertRaises(KeyError):
+			x=c.subject[Oid("streetAddress")]
+	def test_subjectfieldindex(self):
+		c=X509(self.cert1)
+		self.assertEqual(repr(c.subject[0]),repr((Oid('C'),u'RU')))
+	def test_subjectbadindex(self):
+		c=X509(self.cert1)
+		with self.assertRaises(IndexError):
+			x=c.subject[11]
+		with self.assertRaises(IndexError):
+			x=c.subject[-1]
 	def test_notBefore(self):
 		c=X509(self.cert1)
 		self.assertEqual(c.startDate,datetime.datetime(2014,10,26,19,07,17,0,utc))
@@ -169,11 +188,16 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 		cert=X509(self.cert1)
 		ext=cert.extensions[0]
 		self.assertEqual(str(ext),'CA:FALSE')
+		self.assertEqual(unicode(ext),u'CA:FALSE')
 	def test_extenson_find(self):
 		cert=X509(self.cert1)
 		exts=cert.extensions.find(Oid('subjectAltName'))
 		self.assertEqual(len(exts),1)
 		self.assertEqual(exts[0].oid,Oid('subjectAltName'))
+	def test_extension_bad_find(self):
+		cert=X509(self.cert1)
+		with self.assertRaises(TypeError):
+			exts=cert.extensions.find('subjectAltName')
 	def test_extenson_critical(self):
 		cert=X509(self.digicert_cert)
 		crit_exts=cert.extensions.find_critical()
@@ -190,6 +214,9 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 		pk2=c.pubkey
 		self.assertFalse(c.verify(key=pk2))
 		self.assertTrue(c.verify(key=pubkey))
+	def test_verify_self_singed(self):
+		ca=X509(self.ca_cert)
+		self.assertTrue(ca.verify())
 	def test_default_filestore(self):
 		store=X509Store(default=True)
 		c1=X509(self.cert1)

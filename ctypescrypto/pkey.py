@@ -241,9 +241,9 @@ class PKey(object):
 				continue
 			rv=libcrypto.EVP_PKEY_CTX_ctrl_str(ctx,oper,str(opts[oper]))
 			if rv==-2:
-				raise PKeyError("Parameter %s is not supported by key"%(oper))
+				raise PKeyError("Parameter %s is not supported by key"%(oper,))
 			if rv<1:
-				raise PKeyError("Error setting parameter %s"(oper))
+				raise PKeyError("Error setting parameter %s"%(oper,))
 # Declare function prototypes
 libcrypto.EVP_PKEY_cmp.argtypes=(c_void_p,c_void_p)
 libcrypto.PEM_read_bio_PrivateKey.restype=c_void_p

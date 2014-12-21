@@ -9,32 +9,58 @@ class TestDigestType(unittest.TestCase):
 		self.assertEqual(d.digest_size(),16)
 		self.assertEqual(d.block_size(),64)
 		self.assertEqual(d.oid(),Oid("md4"))
+		self.assertEqual(d.name,'md4')
 	def test_md5(self):
 		d=digest.DigestType("md5")
 		self.assertEqual(d.digest_size(),16)
 		self.assertEqual(d.block_size(),64)
 		self.assertEqual(d.oid(),Oid("md5"))
+		self.assertEqual(d.name,'md5')
 	def test_sha1(self):
 		d=digest.DigestType("sha1")
 		self.assertEqual(d.digest_size(),20)
 		self.assertEqual(d.block_size(),64)
 		self.assertEqual(d.oid(),Oid("sha1"))
+		self.assertEqual(d.name,'sha1')
 	def test_sha256(self):
 		d=digest.DigestType("sha256")
 		self.assertEqual(d.digest_size(),32)
 		self.assertEqual(d.block_size(),64)
 		self.assertEqual(d.oid(),Oid("sha256"))
+		self.assertEqual(d.name,'sha256')
 	def test_sha384(self):
 		d=digest.DigestType("sha384")
 		self.assertEqual(d.digest_size(),48)
 		self.assertEqual(d.block_size(),128)
 		self.assertEqual(d.oid(),Oid("sha384"))
+		self.assertEqual(d.name,'sha384')
 	def test_sha512(self):
 		d=digest.DigestType("sha512")
 		self.assertEqual(d.digest_size(),64)
 		self.assertEqual(d.block_size(),128)
 		self.assertEqual(d.oid(),Oid("sha512"))
-		
+		self.assertEqual(d.name,'sha512')
+	def test_createfromoid(self):
+		oid=Oid('sha256')
+		d=digest.DigestType(oid)
+		self.assertEqual(d.digest_size(),32)
+		self.assertEqual(d.block_size(),64)
+		self.assertEqual(d.oid(),Oid("sha256"))
+		self.assertEqual(d.name,'sha256')
+	def test_createfromEVP_MD(self):
+		d1=digest.DigestType("sha256")
+		d2=digest.DigestType(None)
+		with self.assertRaises(AttributeError):
+			s=d2.name
+		d2.digest=d1.digest
+		self.assertEqual(d2.digest_size(),32)
+		self.assertEqual(d2.block_size(),64)
+		self.assertEqual(d2.oid(),Oid("sha256"))
+		self.assertEqual(d2.name,'sha256')
+	def test_invalidDigest(self):
+		with self.assertRaises(digest.DigestError):
+			d=digest.DigestType("no-such-digest")
+
 
 class TestIface(unittest.TestCase):
 	""" Test all methods with one algorithms """
@@ -46,6 +72,10 @@ class TestIface(unittest.TestCase):
 		dgst.update(self.msg)
 		self.assertEqual(dgst.digest_size,20)
 		self.assertEqual(dgst.hexdigest(),self.dgst)
+	def test_digestwithdata(self):
+		md=digest.DigestType("sha1")
+		dgst=digest.Digest(md)
+		self.assertEqual(dgst.digest(self.msg),b16decode(self.dgst))
 	def test_length(self):
 		l=len(self.msg)
 		msg=self.msg+" Dog barks furiously."
