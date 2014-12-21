@@ -117,10 +117,7 @@ class Cipher:
 		if self.ctx == 0:
 			raise CipherError("Unable to create cipher context")
 		self.encrypt = encrypt
-		if encrypt: 
-			enc = 1
-		else: 
-			enc = 0
+		enc=1 if encrypt else 0
 		if not iv is None and len(iv) != cipher_type.iv_length():
 			raise ValueError("Invalid IV length for this algorithm")
 			
@@ -151,10 +148,7 @@ class Cipher:
 		"""
 			Sets padding mode of the cipher
 		"""
-		if padding:
-			padding_flag = 1
-		else:
-			padding_flag = 0
+		padding_flag=1 if padding else 0
 		libcrypto.EVP_CIPHER_CTX_set_padding(self.ctx, padding_flag)
 
 	def update(self, data):
@@ -173,7 +167,7 @@ class Cipher:
 			raise CipherError("No updates allowed")
 		if not isinstance(data,str):
 			raise TypeError("A string is expected")
-		if len(data) <= 0:
+		if len(data) == 0:
 			return ""
 		outbuf=create_string_buffer(self.block_size+len(data))
 		outlen=c_int(0)

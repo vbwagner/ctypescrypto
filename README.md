@@ -78,6 +78,19 @@ python big integer.
 X509 certificates
 -----------------
 
+Certificates are cryptographically signed documents, which tie together
+public key and some attributes of key owner (certificate subject).
+Certificates are signed by some trusted organizations called Certificate
+Authorities (one which have issued given certificate, is called
+certificate issuer). Your browser or operating system typically have
+predefined store of the trusted CA certificates (although nothing
+prevent you from running your own CA using openssl command line utility,
+and trust only it). 
+
+
+
+Certificates are described in [RFC 5280](http://tools.ietf.org/html/rfc5280)
+
 Module **ctypescrypto.x509** contains objects **X509** which represents
 certificate (and can be constructed from string, contained PEM
 or DER certificate) and object **X509Store** which is a store of trusted
@@ -102,6 +115,16 @@ some operations with CMS and certificate verification.
 
 CMS documents
 -------------
+
+CMS stands for Cryptographic Message Syntax. It is defined in the
+[RFC 5652](http://tools.ietf.org/html/rfc5652).
+CMS defines several types of documents. There is **SignedData**,
+which can be read by anyone, but is protected from authorized changes
+by digital signature of its author. There is **EnvelopedData** protected
+from unauthorized reading by cipher and allowed to be read only by
+owners of certain private keys, and there is **EncryptedData**, which
+are protected by symmetric cipher keys.
+
 
 There is basic factory function **CMS()**, which parses PEM or der
 representation of cryptographic message and generates appropriate

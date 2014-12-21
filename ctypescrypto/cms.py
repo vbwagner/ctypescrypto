@@ -171,7 +171,7 @@ class SignedData(CMSBase):
 		res=libcrypto.CMS_verify(self.ptr,certstack,store.store,bio,None,flags)
 		return res>0
 	@property	
-	def signers(self,store=None):
+	def signers(self):
 		"""
 		Return list of signer's certificates
 		"""

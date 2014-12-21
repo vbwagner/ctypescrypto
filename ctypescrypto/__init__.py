@@ -13,7 +13,7 @@ def config(filename=None):
 	"""
 	libcrypto.OPENSSL_config(filename)
 
-__all__ = ['bio','cipher','cms','config','digest','ec','engine','exception','oid','pbkdf2','pkey','rand','x509']
+__all__ = ['config']
 
 libcrypto = CDLL("libcrypto.so.1.0.0")
 libcrypto.OPENSSL_config.argtypes=(c_char_p,)
