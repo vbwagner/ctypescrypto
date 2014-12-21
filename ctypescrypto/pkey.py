@@ -172,7 +172,7 @@ class PKey(object):
 		clear_err_stack()
 		pkey_id=c_int(0)
 		libcrypto.EVP_PKEY_asn1_get0_info(byref(pkey_id),None,None,None,None,ameth)
-		libcrypto.ENGINE_finish(tmpeng)
+		#libcrypto.ENGINE_finish(tmpeng)
 		if "paramsfrom" in kwargs:
 			ctx=libcrypto.EVP_PKEY_CTX_new(kwargs["paramsfrom"].key,None)
 		else:
@@ -291,3 +291,4 @@ libcrypto.PEM_write_bio_PrivateKey.argtypes=(c_void_p,c_void_p,c_void_p,c_char_p
 libcrypto.PEM_write_bio_PUBKEY.argtypes=(c_void_p,c_void_p)
 libcrypto.i2d_PUBKEY_bio.argtypes=(c_void_p,c_void_p)
 libcrypto.i2d_PrivateKey_bio.argtypes=(c_void_p,c_void_p)
+libcrypto.ENGINE_finish.argtypes=(c_void_p,)

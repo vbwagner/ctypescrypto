@@ -28,7 +28,6 @@ Also, this extension takes some care of correctly converting textual
 information from ASN.1 structures into unicode.
 
 
-
 Digest calculation
 ------------------
 
@@ -44,6 +43,23 @@ ctypescrypto modules, so it would work with engine-provided digests.
 
 Additionally there is **DigestType** class which may be needed to
 construct CMS SignedData objects or add signatures to them.
+
+
+MAC calculation
+---------------
+
+Mac is Message Authentication Code - it is like keyed digest, which
+depends not only on message, but also on key, which should be used both
+when initially computing MAC and when verifying it. MACs can be viewed
+as "digital signatures with symmetric keys".
+
+Most common type of MAC is HMAC (i.e. hash-based MAC), described in 
+[RFC 2104](https://tools.ietf.org/html/rfc2104), but there are other,
+for instance [GOST 28147-89](https://tools.ietf.org/html/rfc5830) defines MAC based on symmetric cipher.
+Also GSM 0348 uses DES symmetric cipher as MAC. OpenSSL supports
+GOST mac via loadable engine module, but doesn't seem to support any
+non-HMAC MAC in the core. So, MAC is only test in the test suite which
+requires loadable engine.
 
 Symmetric ciphers
 -----------------
@@ -201,7 +217,5 @@ Possible future enhancements
 3. OCSP ([RFC 6960](http://tools.ietf.org/html/rfc6960))request creation and response parsing
 4. Timestamping ([RFC 3161](http://tools.ietf.org/html/rfc3161))
 support.
-6. MAC support. Few people know that there is more MACs than just HMAC,
-and even fewer, that OpenSSL supports them.
 
   vim: spelllang=en tw=72

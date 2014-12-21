@@ -7,6 +7,15 @@ strings_loaded=False
 
 __all__ = ['LibCryptoError','clear_err_stack']
 
+def _check_null(s):
+	"""
+	Handle transparently NULL returned from error reporting functions
+	instead of strings
+	"""
+	if s is None:	
+		return ""
+	return s
+
 class LibCryptoError(Exception):
 	"""
 		Exception for libcrypto errors. Adds all the info, which can be
@@ -21,9 +30,9 @@ class LibCryptoError(Exception):
 		e=libcrypto.ERR_get_error()
 		m = msg
 		while e != 0:
-			m+="\n\t"+libcrypto.ERR_lib_error_string(e)+":"+\
-			  libcrypto.ERR_func_error_string(e)+":"+\
-			  libcrypto.ERR_reason_error_string(e)
+			m+="\n\t"+_check_null(libcrypto.ERR_lib_error_string(e))+":"+\
+			  _check_null(libcrypto.ERR_func_error_string(e))+":"+\
+			  _check_null(libcrypto.ERR_reason_error_string(e))
 			e=libcrypto.ERR_get_error()
 		self.args=(m,)
 
