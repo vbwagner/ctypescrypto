@@ -154,7 +154,7 @@ class X509Name(object):
 			b=Membio()
 			libcrypto.ASN1_STRING_print_ex(b.bio,s,self.PRINT_FLAG)
 			return unicode(b)
-		elif isinstance(key,int):
+		elif isinstance(key,(int,long)):
 			# Return OID, string tuple
 			entry=libcrypto.X509_NAME_get_entry(self.ptr,key)
 			if entry is None:
@@ -164,8 +164,15 @@ class X509Name(object):
 			b=Membio()
 			libcrypto.ASN1_STRING_print_ex(b.bio,s,self.PRINT_FLAG)
 			return (oid,unicode(b))
+		else:
+			raise TypeError("X509 NAME can be indexed by Oids or integers only")
 
 	def __setitem__(self,key,val):
+		if not self.writable:
+			raise ValueError("Attempt to modify constant X509 object")
+		else:
+			raise NotImplementedError
+	def __delitem__(self,key):
 		if not self.writable:
 			raise ValueError("Attempt to modify constant X509 object")
 		else:
@@ -487,11 +494,11 @@ class StackOfX509(object):
 		"""
 		if  ptr is None:
 			self.need_free = True
-			self.ptr=libcrypt.sk_new_null()
+			self.ptr=libcrypto.sk_new_null()
 			if certs is not None:
 				for crt in certs:
 					self.append(crt)
-		elif not certs is None:
+		elif certs is not None:
 				raise ValueError("cannot handle certs an ptr simultaneously")
 		else:
 			self.need_free = disposable
@@ -503,12 +510,15 @@ class StackOfX509(object):
 			raise IndexError
 		p=libcrypto.sk_value(self.ptr,index)
 		return X509(ptr=libcrypto.X509_dup(p))
-	def __putitem__(self,index,value):
+	def __setitem__(self,index,value):
 		if not self.need_free:
 			raise ValueError("Stack is read-only")
 		if index <0 or index>=len(self):
 			raise IndexError
-		p=libcrypto.sk_set(self.ptr,index,libcrypto.X509_dup(value.cert))
+		if not isinstance(value,X509):
+			raise TypeError('StackOfX508 can contain only X509 objects')
+		p=libcrypto.sk_value(self.ptr,index)
+		libcrypto.sk_set(self.ptr,index,libcrypto.X509_dup(value.cert))
 		libcrypto.X509_free(p)
 	def __delitem__(self,index):	
 		if not self.need_free:
@@ -523,6 +533,8 @@ class StackOfX509(object):
 	def append(self,value):
 		if not self.need_free:
 			raise ValueError("Stack is read-only")
+		if not isinstance(value,X509):
+			raise TypeError('StackOfX508 can contain only X509 objects')
 		libcrypto.sk_push(self.ptr,libcrypto.X509_dup(value.cert))
 libcrypto.i2a_ASN1_INTEGER.argtypes=(c_void_p,c_void_p)
 libcrypto.ASN1_STRING_print_ex.argtypes=(c_void_p,c_void_p,c_long)
@@ -549,3 +561,10 @@ libcrypto.X509V3_EXT_print.argtypes=(c_void_p,POINTER(_x509_ext),c_long,c_int)
 libcrypto.X509_get_ext.restype=c_void_p
 libcrypto.X509_get_ext.argtypes=(c_void_p,c_int)
 libcrypto.X509V3_EXT_print.argtypes=(c_void_p,POINTER(_x509_ext),c_long,c_int)
+libcrypto.sk_set.argtypes=(c_void_p,c_int,c_void_p)
+libcrypto.sk_set.restype=c_void_p
+libcrypto.sk_value.argtypes=(c_void_p,c_int)
+libcrypto.sk_value.restype=c_void_p
+libcrypto.X509_dup.restype=c_void_p
+libcrypto.sk_new_null.restype=c_void_p
+libcrypto.X509_dup.argtypes=(c_void_p,)

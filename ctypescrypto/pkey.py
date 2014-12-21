@@ -36,10 +36,10 @@ class PKey(object):
 			self.key=ptr
 			self.cansign=cansign
 			if not privkey is None or not pubkey is None:
-				raise TypeError("Just one of pubkey or privkey can be specified")
+				raise TypeError("Just one of ptr, pubkey or privkey can be specified")
 		elif not privkey is None:
 			if not pubkey is None:
-				raise TypeError("Just one of pubkey or privkey can be specified")
+				raise TypeError("Just one of ptr, pubkey or privkey can be specified")
 			b=Membio(privkey)
 			self.cansign=True
 			if format == "PEM":
@@ -152,7 +152,7 @@ class PKey(object):
 			rsa_keygen_bits=number - size of key to be generated
 			rsa_keygen_pubexp - RSA public expontent(default 65537)
 
-			Algorithn specific parameters for DSA,DH and EC
+			Algorithm specific parameters for DSA,DH and EC
 
 			paramsfrom=PKey object
 

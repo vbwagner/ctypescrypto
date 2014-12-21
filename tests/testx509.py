@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
-from ctypescrypto.x509 import X509,X509Store,utc
+from ctypescrypto.x509 import X509,X509Store,utc,StackOfX509
 from ctypescrypto.oid import Oid
 from tempfile import NamedTemporaryFile
 import datetime
@@ -130,7 +130,15 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 	def test_subjectfields(self):
 		c=X509(self.cert1)
 		self.assertEqual(c.subject[Oid("C")],"RU")
+		with self.assertRaises(TypeError):
+			x=c.subject["CN"]
 		self.assertEqual(c.subject[Oid("L")],u'\u041c\u043e\u0441\u043a\u0432\u0430')
+	def test_subjectmodify(self):
+		c=X509(self.cert1)
+		with self.assertRaises(ValueError):
+			c.subject[Oid("CN")]=u'Foo'
+		with self.assertRaises(ValueError):
+			del c.subject[Oid('CN')]
 	def test_subjectbadsubfield(self):
 		c=X509(self.cert1)
 		with self.assertRaises(KeyError):
@@ -184,7 +192,7 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 		ext_id=ext.oid
 		self.assertTrue(isinstance(ext_id,Oid))
 		self.assertEqual(ext_id,Oid('basicConstraints'))
-	def text_extension_text(self):
+	def test_extension_text(self):
 		cert=X509(self.cert1)
 		ext=cert.extensions[0]
 		self.assertEqual(str(ext),'CA:FALSE')
@@ -244,5 +252,53 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 		trusted.close()
 	def test_verify_by_dirstore(self):
 		pass
+	def test_certstack1(self):
+		l=[]
+		l.append(X509(self.cert1))
+		self.assertEqual(unicode(l[0].subject[Oid('CN')]),u'Виктор Вагнер')
+		l.append(X509(self.ca_cert))
+		l.append(X509(self.digicert_cert))
+		stack=StackOfX509(certs=l)
+		self.assertEqual(len(stack),3)
+		self.assertTrue(isinstance(stack[1],X509))
+		self.assertEqual(unicode(stack[0].subject[Oid('CN')]),u'Виктор Вагнер')
+		with self.assertRaises(IndexError):
+			c=stack[-1]
+		with self.assertRaises(IndexError):
+			c=stack[3]
+		del stack[1]
+		self.assertEqual(len(stack),2)
+		self.assertEqual(unicode(stack[0].subject[Oid('CN')]),u'Виктор Вагнер')
+		self.assertEqual(unicode(stack[1].subject[Oid('CN')]),u'DigiCert High Assurance EV CA-1')
+	def test_certstack2(self):
+		stack=StackOfX509()
+		stack.append(X509(self.cert1))
+		stack.append(X509(self.ca_cert))
+		c=stack[1]
+		stack[1]=X509(self.digicert_cert)
+		self.assertEqual(len(stack),2)
+		self.assertEqual(unicode(stack[1].subject[Oid('CN')]),u'DigiCert High Assurance EV CA-1')
+		with self.assertRaises(IndexError):
+			stack[-1]=c
+		with self.assertRaises(IndexError):
+			stack[3]=c
+		with self.assertRaises(TypeError):
+			stack[0]=self.cert1
+		with self.assertRaises(TypeError):
+			stack.append(self.cert1)
+	def test_certstack3(self):
+		l=[]
+		l.append(X509(self.cert1))
+		self.assertEqual(unicode(l[0].subject[Oid('CN')]),u'Виктор Вагнер')
+		l.append(X509(self.ca_cert))
+		l.append(X509(self.digicert_cert))
+		stack=StackOfX509(certs=l)
+		stack2=StackOfX509(ptr=stack.ptr,disposable=False)
+		with self.assertRaises(ValueError):
+			stack3=StackOfX509(ptr=stack.ptr,certs=l)
+		with self.assertRaises(ValueError):
+			stack2[1]=l[0]
+		with self.assertRaises(ValueError):
+			stack2.append(l[0])
 if __name__ == '__main__':
 	unittest.main()
