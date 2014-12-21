@@ -10,6 +10,7 @@ class TestCipherType(unittest.TestCase):
 		self.assertEqual(ct.block_size(),8)
 		self.assertEqual(ct.key_length(),8)
 		self.assertEqual(ct.iv_length(),8)
+		self.assertEqual(ct.algo(),'DES-CBC')
 		self.assertEqual(ct.oid().shortname(),"DES-CBC")
 		self.assertEqual(ct.mode(),"CBC")
 	def test_ciphaesofb(self):
@@ -17,10 +18,18 @@ class TestCipherType(unittest.TestCase):
 		self.assertEqual(ct.block_size(),1)
 		self.assertEqual(ct.key_length(),32)
 		self.assertEqual(ct.iv_length(),16)
+		self.assertEqual(ct.algo(),'AES-256-OFB')
 		self.assertEqual(ct.oid().shortname(),"AES-256-OFB")
 		self.assertEqual(ct.mode(),"OFB")
+	def test_unknowncipher(self):
+		with self.assertRaises(cipher.CipherError):
+			ct=cipher.CipherType("no-such-cipher")
 
 class TestEncryptDecrypt(unittest.TestCase):
+	def test_cons_nokey(self):
+		ct=cipher.CipherType("DES-CBC")
+		with self.assertRaises(ValueError):
+			c=cipher.Cipher(ct,None,None)
 	def test_blockcipher(self):
 		data="sdfdsddf"
 		key='abcdabcd'
@@ -79,7 +88,7 @@ class TestEncryptDecrypt(unittest.TestCase):
 		with self.assertRaises(ValueError):
 			c=cipher.new("AES-128-OFB",key,iv=iv)
 	def test_variable_keylength(self):
-		encryptkey="abcdefabcdef"
+		encryptkey="abcdefabcdefghtlgvasdgdgsdgdsg"
 		data="asdfsdfsdfsdfsdfsdfsdfsdf"
 		iv="abcdefgh"
 		c=cipher.new("bf-ofb",encryptkey,iv=iv)
@@ -88,5 +97,6 @@ class TestEncryptDecrypt(unittest.TestCase):
 		d=cipher.new("bf-ofb",decryptkey,encrypt=False,iv=iv)
 		deciph=d.update(ciphertext)+d.finish()
 		self.assertEqual(deciph,data)
+
 if __name__ == '__main__':
 	unittest.main()

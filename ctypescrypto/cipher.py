@@ -79,7 +79,7 @@ class CipherType:
 		"""
 			Return cipher's algorithm name, derived from OID
 		"""
-		return self.oid().short_name() 
+		return self.oid().shortname() 
 	def oid(self):
 		"""
 			Returns ASN.1 object identifier of the cipher as
@@ -125,7 +125,7 @@ class Cipher:
 			if (cipher_type.flags() & 8) != 0:
 				# Variable key length cipher.
 				result = libcrypto.EVP_CipherInit_ex(self.ctx, cipher_type.cipher, None, None, None, c_int(enc))
-				result=libcrypto.EVP_CIPHER_CTX_set_key_length(self.ctx,len(key))
+				result = libcrypto.EVP_CIPHER_CTX_set_key_length(self.ctx,len(key))
 				if result == 0:
 					self._clean_ctx()
 					raise CipherError("Unable to set key length")
@@ -202,8 +202,8 @@ class Cipher:
 	def _clean_ctx(self):
 		try:
 			if self.ctx is not None:
-				self.libcrypto.EVP_CIPHER_CTX_cleanup(self.ctx)
-				self.libcrypto.EVP_CIPHER_CTX_free(self.ctx)
+				libcrypto.EVP_CIPHER_CTX_cleanup(self.ctx)
+				libcrypto.EVP_CIPHER_CTX_free(self.ctx)
 				del(self.ctx)
 		except AttributeError:
 			pass
