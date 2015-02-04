@@ -177,6 +177,8 @@ class X509Name(object):
 			raise ValueError("Attempt to modify constant X509 object")
 		else:
 			raise NotImplementedError
+	def __hash__(self):
+		return libcrypto.X509_NAME_hash(self.ptr)
 
 class _x509_ext(Structure):
 	""" Represens C structure X509_EXTENSION """
@@ -568,3 +570,5 @@ libcrypto.sk_value.restype=c_void_p
 libcrypto.X509_dup.restype=c_void_p
 libcrypto.sk_new_null.restype=c_void_p
 libcrypto.X509_dup.argtypes=(c_void_p,)
+libcrypto.X509_NAME_hash.restype=c_long
+libcrypto.X509_NAME_hash.argtypes=(c_void_p,)

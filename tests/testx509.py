@@ -158,6 +158,12 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 	def test_notAfter(self):
 		c=X509(self.cert1)
 		self.assertEqual(c.endDate,datetime.datetime(2024,10,23,19,7,17,0,utc))
+	def test_subjectHash(self):
+		c=X509(self.cert1)
+		self.assertEqual(hash(c.subject),0x1f3ed722)
+	def test_issuerHash(self):
+		c=X509(self.cert1)
+		self.assertEqual(hash(c.issuer),0x7d3ea8c3)
 	def test_namecomp(self):
 		c=X509(self.cert1)
 		ca=X509(self.ca_cert)
