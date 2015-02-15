@@ -115,6 +115,9 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 		c=X509(self.cert1)
 		p=c.pubkey
 		self.assertEqual(p.exportpub(),self.pubkey1)
+	def test_pem(self):
+		c=X509(self.cert1)
+		self.assertEqual(c.pem(),self.cert1)
 	def test_subject(self):
 		c=X509(self.cert1)
 		self.assertEqual(unicode(c.subject),u'C=RU,ST=Москва,L=Москва,O=Частное лицо,CN=Виктор Вагнер')

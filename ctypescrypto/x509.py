@@ -36,7 +36,7 @@ except ImportError:
 
 	utc=UTC()
 
-__all__ = ['X509Error','X509Name','X509Store','StackOfX509']
+__all__ = ['X509','X509Error','X509Name','X509Store','StackOfX509']
 
 class _validity(Structure):
 	""" ctypes representation of X509_VAL structure 
@@ -305,6 +305,12 @@ class X509(object):
 	def pubkey(self):
 		"""EVP PKEy object of certificate public key"""
 		return PKey(ptr=libcrypto.X509_get_pubkey(self.cert,False))
+	def pem(self):
+		""" Returns PEM represntation of the certificate """
+		b=Membio()
+		if libcrypto.PEM_write_bio_X509(b.bio,self.cert)==0:
+			raise X509Error("error serializing certificate")
+		return str(b)
 	def verify(self,store=None,chain=[],key=None):	
 		""" 
 		Verify self. Supports verification on both X509 store object 
@@ -540,6 +546,10 @@ class StackOfX509(object):
 		libcrypto.sk_push(self.ptr,libcrypto.X509_dup(value.cert))
 libcrypto.i2a_ASN1_INTEGER.argtypes=(c_void_p,c_void_p)
 libcrypto.ASN1_STRING_print_ex.argtypes=(c_void_p,c_void_p,c_long)
+libcrypto.PEM_read_bio_X509.restype=c_void_p
+libcrypto.PEM_read_bio_X509.argtypes=(c_void_p,POINTER(c_void_p),c_void_p,c_void_p)
+libcrypto.PEM_write_bio_X509.restype=c_int
+libcrypto.PEM_write_bio_X509.argtypes=(c_void_p,c_void_p)
 libcrypto.ASN1_TIME_print.argtypes=(c_void_p,c_void_p)
 libcrypto.ASN1_INTEGER_get.argtypes=(c_void_p,)
 libcrypto.ASN1_INTEGER_get.restype=c_long
