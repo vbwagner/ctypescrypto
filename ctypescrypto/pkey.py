@@ -129,9 +129,14 @@ class PKey(object):
 			raise PKeyError("Initailizing derive context")
 		if libcrypto.EVP_PKEY_derive_init(ctx)<1:
 			raise PKeyError("derive_init")
-		self._configure_context(self,ctx,kwargs)
+
+		
+		self._configure_context(self,ctx,kwargs,["ukm"])
 		if libcrypto.EVP_PKEY_derive_set_peer(ctx,peerkey.key)<=0:
 			raise PKeyError("Cannot set peer key")
+		if ukm in kwargs:
+			 if libcrypto.EVP_PKEY_CTX_ctrl(ctx,-1,1<<10,8,0,kwargs[ukm])<=0:
+			 	raise PKeyError("Cannot set UKM")
 		keylen=c_long(0)
 		if libcrypto.EVP_PKEY_derive(ctx,None,byref(keylen))<=0:
 			raise PKeyError("computing shared key length")
@@ -262,7 +267,9 @@ libcrypto.EVP_PKEY_asn1_get0_info.argtypes=(POINTER(c_int),POINTER(c_int),POINTE
 libcrypto.EVP_PKEY_cmp.restype=c_int
 libcrypto.EVP_PKEY_cmp.argtypes=(c_void_p,c_void_p)
 libcrypto.EVP_PKEY_CTX_ctrl_str.restype=c_int
-libcrypto.EVP_PKEY_CTX_ctrl_str.argtypes=(c_void_p,)
+libcrypto.EVP_PKEY_CTX_ctrl_str.argtypes=(c_void_p,c_void_p,c_void_p)
+libcrypto.EVP_PKEY_CTX_ctrl.restype=c_int
+libcrypto.EVP_PKEY_CTX_ctrl.argtypes=(c_void_p,c_int,c_int,c_int,c_int,c_void_p)
 libcrypto.EVP_PKEY_CTX_free.argtypes=(c_void_p,)
 libcrypto.EVP_PKEY_CTX_new.restype=c_void_p
 libcrypto.EVP_PKEY_CTX_new.argtypes=(c_void_p,c_void_p)

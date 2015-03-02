@@ -65,7 +65,7 @@ class MAC(Digest):
 		if self.digest_type is None:
 			self.digest_type=DigestType(Oid(libcrypto.EVP_MD_type(libcrypto.EVP_MD_CTX_md(self.ctx))))
 		for (name,val) in kwargs.items():
-			if EVP_PKEY_CTX_ctrl_str(ctx,name,val)<=0:
+			if libcrypto.EVP_PKEY_CTX_ctrl_str(pctx,name,val)<=0:
 				raise DigestError("Unable to set mac parameter")
 		self.digest_size = self.digest_type.digest_size()
 		self.block_size = self.digest_type.block_size()
