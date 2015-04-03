@@ -131,20 +131,20 @@ class PKey(object):
 			raise PKeyError("derive_init")
 
 		
-		self._configure_context(self,ctx,kwargs,["ukm"])
+		self._configure_context(ctx,kwargs,["ukm"])
 		if libcrypto.EVP_PKEY_derive_set_peer(ctx,peerkey.key)<=0:
 			raise PKeyError("Cannot set peer key")
-		if ukm in kwargs:
-			 if libcrypto.EVP_PKEY_CTX_ctrl(ctx,-1,1<<10,8,0,kwargs[ukm])<=0:
+		if "ukm" in kwargs:
+			 if libcrypto.EVP_PKEY_CTX_ctrl(ctx,-1,1<<10,8,8,kwargs["ukm"])<=0:
 			 	raise PKeyError("Cannot set UKM")
 		keylen=c_long(0)
 		if libcrypto.EVP_PKEY_derive(ctx,None,byref(keylen))<=0:
 			raise PKeyError("computing shared key length")
-		buf=create_string_buffer(keylen)
+		buf=create_string_buffer(keylen.value)
 		if libcrypto.EVP_PKEY_derive(ctx,buf,byref(keylen))<=0:
 			raise PKeyError("computing actual shared key")
 		libcrypto.EVP_PKEY_CTX_free(ctx)
-		return buf.raw[:keylen]
+		return buf.raw[:keylen.value]
 	@staticmethod
 	def generate(algorithm,**kwargs):
 		"""
