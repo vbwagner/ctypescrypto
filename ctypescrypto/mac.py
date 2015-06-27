@@ -67,8 +67,8 @@ class MAC(Digest):
         for (name,val) in kwargs.items():
             if libcrypto.EVP_PKEY_CTX_ctrl_str(pctx,name,val)<=0:
                 raise DigestError("Unable to set mac parameter")
-        self.digest_size = self.digest_type.digest_size()
-        self.block_size = self.digest_type.block_size()
+        self.digest_size = self.digest_type.digest_size
+        self.block_size = self.digest_type.block_size
     def digest(self,data=None):
         """
         Method digest is redefined to return keyed MAC value instead of
