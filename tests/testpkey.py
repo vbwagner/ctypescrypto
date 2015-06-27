@@ -3,13 +3,13 @@ import unittest
 from base64 import b64decode, b16decode
 
 def pem2der(s):
-	start=s.find('-----\n')
-	finish=s.rfind('\n-----END')
-	data=s[start+6:finish]
-	return b64decode(data)
+    start=s.find('-----\n')
+    finish=s.rfind('\n-----END')
+    data=s[start+6:finish]
+    return b64decode(data)
 
 class TestPKey(unittest.TestCase):
-	rsa="""-----BEGIN PRIVATE KEY-----
+    rsa="""-----BEGIN PRIVATE KEY-----
 MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAL9CzVZu9bczTmB8
 776pPUoPo6WbAfwQqqiGrj91bk2mYE+MNLo4yIQH45IcwGzkyS8+YyQJf8Bux5BC
 oZ2nwzXm5+JZkxkN1mtMzit2D7/hHmrZLoSbr0sxXFrD4a35RI4hXnSK9Sk01sXA
@@ -26,7 +26,7 @@ Ao6uTm8fnkD4C836wS4mYAPqwRBK1JvnEXEQee9irf+ip89BAg74ViTcGF9lwJwQ
 gOM+X5Db+3pK
 -----END PRIVATE KEY-----
 """
-	rsakeytext="""Public-Key: (1024 bit)
+    rsakeytext="""Public-Key: (1024 bit)
 Modulus:
     00:bf:42:cd:56:6e:f5:b7:33:4e:60:7c:ef:be:a9:
     3d:4a:0f:a3:a5:9b:01:fc:10:aa:a8:86:ae:3f:75:
@@ -39,13 +39,13 @@ Modulus:
     1b:a4:85:ab:b0:87:7b:78:2f
 Exponent: 65537 (0x10001)
 """
-	ec1priv="""-----BEGIN PRIVATE KEY-----
+    ec1priv="""-----BEGIN PRIVATE KEY-----
 MIGEAgEAMBAGByqGSM49AgEGBSuBBAAKBG0wawIBAQQgKnG6neqZvB98EEuuxnHs
 fv+L/5abuNNG20wzUqRpncOhRANCAARWKXWeUZ6WiCKZ2kHx87jmJyx0G3ZB1iQC
 +Gp2AJYswbQPhGPigKolzIbZYfwnn7QOca6N8QDhPAn3QQK8trZI
 -----END PRIVATE KEY-----
 """
-	ec1keytext="""Public-Key: (256 bit)
+    ec1keytext="""Public-Key: (256 bit)
 pub: 
     04:56:29:75:9e:51:9e:96:88:22:99:da:41:f1:f3:
     b8:e6:27:2c:74:1b:76:41:d6:24:02:f8:6a:76:00:
@@ -54,66 +54,66 @@ pub:
     02:bc:b6:b6:48
 ASN1 OID: secp256k1
 """
-	ec1pub="""-----BEGIN PUBLIC KEY-----
+    ec1pub="""-----BEGIN PUBLIC KEY-----
 MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEVil1nlGelogimdpB8fO45icsdBt2QdYk
 AvhqdgCWLMG0D4Rj4oCqJcyG2WH8J5+0DnGujfEA4TwJ90ECvLa2SA==
 -----END PUBLIC KEY-----
 """
-	
-	def test_unencrypted_pem(self):
-		key=PKey(privkey=self.rsa)
-		self.assertIsNotNone(key.key)
-		self.assertEqual(str(key),self.rsakeytext)
-	def test_export_priv_pem(self):
-		key=PKey(privkey=self.ec1priv)
-		out=key.exportpriv()
-		self.assertEqual(self.ec1priv,out)
-	def test_unencrypted_pem_ec(self):
-		
-		key=PKey(privkey=self.ec1priv)
-		self.assertIsNotNone(key.key)
-		self.assertEqual(str(key),self.ec1keytext)
-	def test_unencrypted_der_ec(self):
-		key=PKey(privkey=pem2der(self.ec1priv),format="DER")
-		self.assertIsNotNone(key.key)
-		self.assertEqual(str(key),self.ec1keytext)
-	def test_pubkey_pem(self):
-		key=PKey(pubkey=self.ec1pub)
-		self.assertIsNotNone(key.key)	
-		self.assertEqual(str(key),self.ec1keytext)
-	def test_pubkey_der(self):
-		key=PKey(pubkey=pem2der(self.ec1pub),format="DER")
-		self.assertIsNotNone(key.key)	
-		self.assertEqual(str(key),self.ec1keytext)
-	def test_compare(self):
-		key1=PKey(privkey=self.ec1priv)
-		self.assertIsNotNone(key1.key)
-		key2=PKey(pubkey=self.ec1pub)
-		self.assertIsNotNone(key2.key)
-		self.assertEqual(key1,key2)
-	def test_sign(self):
-		signer=PKey(privkey=self.ec1priv)
-		digest=b16decode("FFCA2587CFD4846E4CB975B503C9EB940F94566AA394E8BD571458B9DA5097D5")
-		signature=signer.sign(digest)
-		self.assertTrue(len(signature)>0)
-		verifier=PKey(pubkey=self.ec1pub)
-		self.assertTrue(verifier.verify(digest,signature))
-	def test_generate(self):
-		newkey=PKey.generate("rsa")
-		self.assertIsNotNone(newkey.key)
-		s=str(newkey)
-		self.assertEqual(s[:s.find("\n")],"Public-Key: (1024 bit)")
-	def test_generate_params(self):
-		newkey=PKey.generate("rsa",rsa_keygen_bits=2048)
-		self.assertIsNotNone(newkey.key)
-		s=str(newkey)
-		self.assertEqual(s[:s.find("\n")],"Public-Key: (2048 bit)")
-	def test_generate_ec(self):
-		templkey=PKey(pubkey=self.ec1pub)
-		newkey=PKey.generate("ec",paramsfrom=templkey)
-		self.assertIsNotNone(newkey.key)
-		s=str(newkey)
-		self.assertEqual(s[:s.find("\n")],"Public-Key: (256 bit)")
-		self.assertNotEqual(str(templkey),str(newkey))
+    
+    def test_unencrypted_pem(self):
+        key=PKey(privkey=self.rsa)
+        self.assertIsNotNone(key.key)
+        self.assertEqual(str(key),self.rsakeytext)
+    def test_export_priv_pem(self):
+        key=PKey(privkey=self.ec1priv)
+        out=key.exportpriv()
+        self.assertEqual(self.ec1priv,out)
+    def test_unencrypted_pem_ec(self):
+        
+        key=PKey(privkey=self.ec1priv)
+        self.assertIsNotNone(key.key)
+        self.assertEqual(str(key),self.ec1keytext)
+    def test_unencrypted_der_ec(self):
+        key=PKey(privkey=pem2der(self.ec1priv),format="DER")
+        self.assertIsNotNone(key.key)
+        self.assertEqual(str(key),self.ec1keytext)
+    def test_pubkey_pem(self):
+        key=PKey(pubkey=self.ec1pub)
+        self.assertIsNotNone(key.key)   
+        self.assertEqual(str(key),self.ec1keytext)
+    def test_pubkey_der(self):
+        key=PKey(pubkey=pem2der(self.ec1pub),format="DER")
+        self.assertIsNotNone(key.key)   
+        self.assertEqual(str(key),self.ec1keytext)
+    def test_compare(self):
+        key1=PKey(privkey=self.ec1priv)
+        self.assertIsNotNone(key1.key)
+        key2=PKey(pubkey=self.ec1pub)
+        self.assertIsNotNone(key2.key)
+        self.assertEqual(key1,key2)
+    def test_sign(self):
+        signer=PKey(privkey=self.ec1priv)
+        digest=b16decode("FFCA2587CFD4846E4CB975B503C9EB940F94566AA394E8BD571458B9DA5097D5")
+        signature=signer.sign(digest)
+        self.assertTrue(len(signature)>0)
+        verifier=PKey(pubkey=self.ec1pub)
+        self.assertTrue(verifier.verify(digest,signature))
+    def test_generate(self):
+        newkey=PKey.generate("rsa")
+        self.assertIsNotNone(newkey.key)
+        s=str(newkey)
+        self.assertEqual(s[:s.find("\n")],"Public-Key: (1024 bit)")
+    def test_generate_params(self):
+        newkey=PKey.generate("rsa",rsa_keygen_bits=2048)
+        self.assertIsNotNone(newkey.key)
+        s=str(newkey)
+        self.assertEqual(s[:s.find("\n")],"Public-Key: (2048 bit)")
+    def test_generate_ec(self):
+        templkey=PKey(pubkey=self.ec1pub)
+        newkey=PKey.generate("ec",paramsfrom=templkey)
+        self.assertIsNotNone(newkey.key)
+        s=str(newkey)
+        self.assertEqual(s[:s.find("\n")],"Public-Key: (256 bit)")
+        self.assertNotEqual(str(templkey),str(newkey))
 if __name__ == "__main__":
-	unittest.main()
+    unittest.main()

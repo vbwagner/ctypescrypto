@@ -1,5 +1,5 @@
 """
-	Interface to some libcrypto functions
+    Interface to some libcrypto functions
 
 """
 
@@ -7,11 +7,11 @@
 from ctypes import CDLL,c_char_p
 
 def config(filename=None):
-	"""
-		Loads OpenSSL Config file. If none are specified, loads default
-		(compiled in) one
-	"""
-	libcrypto.OPENSSL_config(filename)
+    """
+        Loads OpenSSL Config file. If none are specified, loads default
+        (compiled in) one
+    """
+    libcrypto.OPENSSL_config(filename)
 
 __all__ = ['config']
 

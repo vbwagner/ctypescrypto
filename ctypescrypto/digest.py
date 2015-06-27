@@ -1,16 +1,16 @@
 """
-	Implements interface to OpenSSL EVP_Digest* functions.
+    Implements interface to OpenSSL EVP_Digest* functions.
 
-	Interface  made as close to hashlib as possible.
+    Interface  made as close to hashlib as possible.
 
-	This module is really an excess effort. Hashlib allows access to
-	mostly same functionality except oids and nids of hashing
-	algortithms (which might be needed for private key operations).
+    This module is really an excess effort. Hashlib allows access to
+    mostly same functionality except oids and nids of hashing
+    algortithms (which might be needed for private key operations).
 
-	hashlib even allows to use engine-provided digests if it is build
-	with dinamically linked libcrypto - so use
-	ctypescrypto.engine.set_default("gost",xFFFF) and md_gost94
-	algorithm would be available both to this module and hashlib.
+    hashlib even allows to use engine-provided digests if it is build
+    with dinamically linked libcrypto - so use
+    ctypescrypto.engine.set_default("gost",xFFFF) and md_gost94
+    algorithm would be available both to this module and hashlib.
 
 """
 from ctypes import c_int, c_char_p, c_void_p, POINTER, c_long,c_longlong, create_string_buffer,byref
@@ -22,144 +22,144 @@ DIGEST_ALGORITHMS = ("MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512")
 __all__ = ['DigestError','Digest','DigestType','new']
 
 class DigestError(LibCryptoError):
-	pass
+    pass
 
 def new(algname):
-	"""
-		Behaves just like hashlib.new. Creates digest object by
-		algorithm name
-	"""
-	md=DigestType(algname)
-	return Digest(md)
+    """
+        Behaves just like hashlib.new. Creates digest object by
+        algorithm name
+    """
+    md=DigestType(algname)
+    return Digest(md)
 
 class DigestType(object):
-	"""
-		
-		Represents EVP_MD object - constant structure which describes
-		digest algorithm
+    """
+        
+        Represents EVP_MD object - constant structure which describes
+        digest algorithm
 
-	"""
-	def __init__(self,	digest_name):
-		"""
-			Finds digest by its name. You can pass Oid object instead of
-			name.
+    """
+    def __init__(self,  digest_name):
+        """
+            Finds digest by its name. You can pass Oid object instead of
+            name.
 
-			Special case is when None is passed as name. In this case
-			unitialized digest is created, and can be initalized later
-			by setting its digest attribute to pointer to EVP_MD
-		"""
-		if digest_name is None:
-			return 
-		if isinstance(digest_name,Oid):
-			self.digest_name=digest_name.longname()
-			self.digest=libcrypto.EVP_get_digestbyname(self.digest_name)
-		else:
-			self.digest_name = str(digest_name)
-			self.digest = libcrypto.EVP_get_digestbyname(self.digest_name)
-		if self.digest is None:
-			raise DigestError("Unknown digest: %s" % self.digest_name)
+            Special case is when None is passed as name. In this case
+            unitialized digest is created, and can be initalized later
+            by setting its digest attribute to pointer to EVP_MD
+        """
+        if digest_name is None:
+            return 
+        if isinstance(digest_name,Oid):
+            self.digest_name=digest_name.longname()
+            self.digest=libcrypto.EVP_get_digestbyname(self.digest_name)
+        else:
+            self.digest_name = str(digest_name)
+            self.digest = libcrypto.EVP_get_digestbyname(self.digest_name)
+        if self.digest is None:
+            raise DigestError("Unknown digest: %s" % self.digest_name)
 
-	@property
-	def name(self):
-		if not hasattr(self,'digest_name'):
-			self.digest_name=Oid(libcrypto.EVP_MD_type(self.digest)).longname()
-		return self.digest_name
-	def __del__(self):
-		pass
-	def digest_size(self):
-		return libcrypto.EVP_MD_size(self.digest)
-	def block_size(self):
-		return libcrypto.EVP_MD_block_size(self.digest)
-	def oid(self):
-		return Oid(libcrypto.EVP_MD_type(self.digest))
+    @property
+    def name(self):
+        if not hasattr(self,'digest_name'):
+            self.digest_name=Oid(libcrypto.EVP_MD_type(self.digest)).longname()
+        return self.digest_name
+    def __del__(self):
+        pass
+    def digest_size(self):
+        return libcrypto.EVP_MD_size(self.digest)
+    def block_size(self):
+        return libcrypto.EVP_MD_block_size(self.digest)
+    def oid(self):
+        return Oid(libcrypto.EVP_MD_type(self.digest))
 
 class Digest(object):
-	"""
-		Represents EVP_MD_CTX object which actually used to calculate
-		digests.
+    """
+        Represents EVP_MD_CTX object which actually used to calculate
+        digests.
 
-	"""
-	def __init__(self,digest_type):
-		"""
-			Initializes digest using given type.
-		"""
-		self._clean_ctx()
-		self.ctx = libcrypto.EVP_MD_CTX_create()
-		if self.ctx is None:
-			raise DigestError("Unable to create digest context")
-		result = libcrypto.EVP_DigestInit_ex(self.ctx, digest_type.digest, None)
-		if result == 0:
-			self._clean_ctx()
-			raise DigestError("Unable to initialize digest")
-		self.digest_type = digest_type
-		self.digest_size = self.digest_type.digest_size()
-		self.block_size = self.digest_type.block_size()
+    """
+    def __init__(self,digest_type):
+        """
+            Initializes digest using given type.
+        """
+        self._clean_ctx()
+        self.ctx = libcrypto.EVP_MD_CTX_create()
+        if self.ctx is None:
+            raise DigestError("Unable to create digest context")
+        result = libcrypto.EVP_DigestInit_ex(self.ctx, digest_type.digest, None)
+        if result == 0:
+            self._clean_ctx()
+            raise DigestError("Unable to initialize digest")
+        self.digest_type = digest_type
+        self.digest_size = self.digest_type.digest_size()
+        self.block_size = self.digest_type.block_size()
 
-	def __del__(self):
-		self._clean_ctx()
+    def __del__(self):
+        self._clean_ctx()
 
-	def update(self, data, length=None):
-		"""
-			Hashes given byte string 
+    def update(self, data, length=None):
+        """
+            Hashes given byte string 
 
-			@param data - string to hash
-			@param length - if not specifed, entire string is hashed,
-					otherwise only first length bytes
-		"""
-		if self.digest_finalized:
-			raise DigestError("No updates allowed")
-		if not isinstance(data,str):
-			raise TypeError("A string is expected")
-		if length is None:
-			length = len(data)
-		elif length > len(data):
-			raise ValueError("Specified length is greater than length of data")
-		result = libcrypto.EVP_DigestUpdate(self.ctx, c_char_p(data), length)
-		if result != 1:
-			raise DigestError, "Unable to update digest"
-		
-	def digest(self, data=None):
-		"""
-			Finalizes digest operation and return digest value
-			Optionally hashes more data before finalizing
-		"""
-		if self.digest_finalized:
-			return self.digest_out.raw[:self.digest_size]
-		if data is not None:
-			self.update(data)
-		self.digest_out = create_string_buffer(256)
-		length = c_long(0)
-		result = libcrypto.EVP_DigestFinal_ex(self.ctx, self.digest_out, byref(length))
-		if result != 1 :
-			raise DigestError("Unable to finalize digest")
-		self.digest_finalized = True
-		return self.digest_out.raw[:self.digest_size]
-	def copy(self):
-		"""
-			Creates copy of the digest CTX to allow to compute digest
-			while being able to hash more data
-		"""
-		new_digest=Digest(self.digest_type)
-		libcrypto.EVP_MD_CTX_copy(new_digest.ctx,self.ctx)
-		return new_digest
+            @param data - string to hash
+            @param length - if not specifed, entire string is hashed,
+                    otherwise only first length bytes
+        """
+        if self.digest_finalized:
+            raise DigestError("No updates allowed")
+        if not isinstance(data,str):
+            raise TypeError("A string is expected")
+        if length is None:
+            length = len(data)
+        elif length > len(data):
+            raise ValueError("Specified length is greater than length of data")
+        result = libcrypto.EVP_DigestUpdate(self.ctx, c_char_p(data), length)
+        if result != 1:
+            raise DigestError, "Unable to update digest"
+        
+    def digest(self, data=None):
+        """
+            Finalizes digest operation and return digest value
+            Optionally hashes more data before finalizing
+        """
+        if self.digest_finalized:
+            return self.digest_out.raw[:self.digest_size]
+        if data is not None:
+            self.update(data)
+        self.digest_out = create_string_buffer(256)
+        length = c_long(0)
+        result = libcrypto.EVP_DigestFinal_ex(self.ctx, self.digest_out, byref(length))
+        if result != 1 :
+            raise DigestError("Unable to finalize digest")
+        self.digest_finalized = True
+        return self.digest_out.raw[:self.digest_size]
+    def copy(self):
+        """
+            Creates copy of the digest CTX to allow to compute digest
+            while being able to hash more data
+        """
+        new_digest=Digest(self.digest_type)
+        libcrypto.EVP_MD_CTX_copy(new_digest.ctx,self.ctx)
+        return new_digest
 
-	def _clean_ctx(self):
-		try:
-			if self.ctx is not None:
-				libcrypto.EVP_MD_CTX_destroy(self.ctx)
-				del(self.ctx)
-		except AttributeError:
-			pass
-		self.digest_out = None
-		self.digest_finalized = False
+    def _clean_ctx(self):
+        try:
+            if self.ctx is not None:
+                libcrypto.EVP_MD_CTX_destroy(self.ctx)
+                del(self.ctx)
+        except AttributeError:
+            pass
+        self.digest_out = None
+        self.digest_finalized = False
 
-	def hexdigest(self,data=None):
-		"""
-			Returns digest in the hexadecimal form. For compatibility
-			with hashlib
-		"""
-		from base64 import b16encode
-		return b16encode(self.digest(data))
+    def hexdigest(self,data=None):
+        """
+            Returns digest in the hexadecimal form. For compatibility
+            with hashlib
+        """
+        from base64 import b16encode
+        return b16encode(self.digest(data))
 
 
 # Declare function result and argument types
