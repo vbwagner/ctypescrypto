@@ -5,6 +5,7 @@
 
 
 from ctypes import CDLL, c_char_p
+from ctypes.util import find_library
 
 def config(filename=None):
     """
@@ -15,6 +16,6 @@ def config(filename=None):
 
 __all__ = ['config']
 
-libcrypto = CDLL("libcrypto.so.1.0.0")
+libcrypto = CDLL(find_library("libcrypto"))
 libcrypto.OPENSSL_config.argtypes = (c_char_p, )
 libcrypto.OPENSSL_add_all_algorithms_conf()
