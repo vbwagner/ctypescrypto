@@ -5,6 +5,8 @@
 
 
 from ctypes import CDLL, c_char_p
+from ctypes.util import find_library
+import sys
 
 def config(filename=None):
     """
@@ -15,6 +17,14 @@ def config(filename=None):
 
 __all__ = ['config']
 
-libcrypto = CDLL("libcrypto.so.1.0.0")
+if sys.platform.startswith('win'):
+    __libname__ = find_library('libeay32')
+else:
+    __libname__ = find_library('crypto')
+
+if __libname__ is None:
+    raise OSError("Cannot find OpenSSL crypto library")
+
+libcrypto = CDLL(__libname__)
 libcrypto.OPENSSL_config.argtypes = (c_char_p, )
 libcrypto.OPENSSL_add_all_algorithms_conf()
