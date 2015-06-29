@@ -6,6 +6,7 @@ from ctypescrypto.oid import Oid
 from tempfile import NamedTemporaryFile
 import datetime
 import unittest
+import os
 
 
 
@@ -244,13 +245,14 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
         c2=X509(self.digicert_cert)
         self.assertTrue(c2.verify(store))
     def test_verify_by_filestore(self):
-        trusted=NamedTemporaryFile()
+        trusted=NamedTemporaryFile(delete=False)
         trusted.write(self.ca_cert)
-        trusted.flush()
+        trusted.close()
         goodcert=X509(self.cert1)
         badcert=X509(self.cert1[0:-30]+"GG"+self.cert1[-28:])
         gitcert=X509(self.digicert_cert)
         store=X509Store(file=trusted.name)
+        os.unlink(trusted.name)
         # We should successfuly verify certificate signed by our CA cert
         self.assertTrue(goodcert.verify(store))
         # We should reject corrupted certificate
