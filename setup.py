@@ -1,32 +1,32 @@
 from distutils.core import setup
 import distutils.cmd
-import sys,os
+import sys, os
 
 class MyTests(distutils.cmd.Command):
-    user_options=[]
+    user_options = []
     def initialize_options(self):
         pass
     def finalize_options(self):
         pass
     def run(self):
-        sys.path.insert(0,os.getcwd())
+        sys.path.insert(0, os.getcwd())
         import unittest
-        result=unittest.TextTestResult(sys.stdout,True,True)
-        suite= unittest.defaultTestLoader.discover("./tests")
-        print "Discovered %d test cases"%suite.countTestCases()
-        result.buffer=True
+        result = unittest.TextTestResult(sys.stdout, True, True)
+        suite = unittest.defaultTestLoader.discover("./tests")
+        print "Discovered %d test cases" % suite.countTestCases()
+        result.buffer = True
         suite.run(result)
         print ""
         if not result.wasSuccessful():
             if len(result.errors):
                 print "============ Errors disovered ================="
-                for r in result.errors:
-                    print r[0],":",r[1]
-            
+                for res in result.errors:
+                    print res[0], ":", res[1]
+
             if len(result.failures):
                 print "============ Failures disovered ================="
-                for r in result.failures:
-                    print r[0],":",r[1]
+                for res in result.failures:
+                    print res[0], ":", res[1]
             sys.exit(1)
         else:
             print "All tests successful"
