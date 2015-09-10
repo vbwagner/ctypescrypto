@@ -140,7 +140,7 @@ class SignedData(CMSBase):
             raise ValueError("Specified keypair has no private part")
         if cert.pubkey != pkey:
             raise ValueError("Certificate doesn't match public key")
-        if libcrypto.CMS_sign_add1_Signer(self.ptr, cert.cert, pkey.ptr,
+        if libcrypto.CMS_add1_signer(self.ptr, cert.cert, pkey.ptr,
                                           digest_type.digest, flags) is None:
             raise CMSError("adding signer")
         if flags & Flags.REUSE_DIGEST == 0:
@@ -325,8 +325,8 @@ libcrypto.CMS_get1_certs.restype = c_void_p
 libcrypto.CMS_get1_certs.argtypes = (c_void_p, )
 libcrypto.CMS_sign.restype = c_void_p
 libcrypto.CMS_sign.argtypes = (c_void_p, c_void_p, c_void_p, c_void_p, c_uint)
-libcrypto.CMS_sign_add1_Signer.restype = c_void_p
-libcrypto.CMS_sign_add1_Signer.argtypes = (c_void_p, c_void_p, c_void_p,
+libcrypto.CMS_add1_signer.restype = c_void_p
+libcrypto.CMS_add1_signer.argtypes = (c_void_p, c_void_p, c_void_p,
                                            c_void_p, c_uint)
 libcrypto.CMS_verify.restype = c_int
 libcrypto.CMS_verify.argtypes = (c_void_p, c_void_p, c_void_p, c_void_p,
