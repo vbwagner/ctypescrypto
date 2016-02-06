@@ -38,42 +38,68 @@ except ImportError:
 
 __all__ = ['X509', 'X509Error', 'X509Name', 'X509Store', 'StackOfX509']
 
-class _validity(Structure):
-    """ ctypes representation of X509_VAL structure
-        needed to access certificate validity period, because openssl
-        doesn't provide fuctions for it - only macros
-    """
-    _fields_ = [('notBefore', c_void_p), ('notAfter', c_void_p)]
+if hasattr(libcrypto,"X509_get_version"):
+    
+# If it is OpenSSL 1.1 or above, use accessor functions
+    _X509_get_version = libcrypto.X509_get_version
+    _X509_get_version.restype = c_long
+    _X509_get_version.argtypes = (c_void_p,)
 
-class _cinf(Structure):
-    """ ctypes representtion of X509_CINF structure
-        neede to access certificate data, which are accessable only
-        via macros
-    """
-    _fields_ = [('version', c_void_p),
-                ('serialNumber', c_void_p),
-                ('sign_alg', c_void_p),
-                ('issuer', c_void_p),
-                ('validity', POINTER(_validity)),
-                ('subject', c_void_p),
-                ('pubkey', c_void_p),
-                ('issuerUID', c_void_p),
-                ('subjectUID', c_void_p),
-                ('extensions', c_void_p),
-               ]
+    _X509_get_notBefore=libcrypto.X509_get_notBefore
+    _X509_get_notBefore.restype = c_void_p
+    _X509_get_notBefore.argtypes = (c_void_p,)
 
-class _x509(Structure):
-    """
-    ctypes represntation of X509 structure needed
-    to access certificate data which are accesable only via
-    macros, not functions
-    """
-    _fields_ = [('cert_info', POINTER(_cinf)),
-                ('sig_alg', c_void_p),
-                ('signature', c_void_p),
-                # There are a lot of parsed extension fields there
-               ]
-_px509 = POINTER(_x509)
+    _X509_get_notAfter=libcrypto.X509_get_notAfter
+    _X509_get_notAfter.restype = c_void_p
+    _X509_get_notAfter.argtypes = (c_void_p,)
+else:
+    # Otherwise declare X509 structure internals and define deep poke
+    # functions
+    class _validity(Structure):
+        """ ctypes representation of X509_VAL structure
+            needed to access certificate validity period, because openssl
+            doesn't provide fuctions for it - only macros
+        """
+        _fields_ = [('notBefore', c_void_p), ('notAfter', c_void_p)]
+
+    class _cinf(Structure):
+        """ ctypes representtion of X509_CINF structure
+            neede to access certificate data, which are accessable only
+            via macros
+        """
+        _fields_ = [('version', c_void_p),
+                    ('serialNumber', c_void_p),
+                    ('sign_alg', c_void_p),
+                    ('issuer', c_void_p),
+                    ('validity', POINTER(_validity)),
+                    ('subject', c_void_p),
+                    ('pubkey', c_void_p),
+                    ('issuerUID', c_void_p),
+                    ('subjectUID', c_void_p),
+                    ('extensions', c_void_p),
+                ]
+
+    class _x509(Structure):
+        """
+        ctypes represntation of X509 structure needed
+        to access certificate data which are accesable only via
+        macros, not functions
+        """
+        _fields_ = [('cert_info', POINTER(_cinf)),
+                    ('sig_alg', c_void_p),
+                    ('signature', c_void_p),
+                    # There are a lot of parsed extension fields there
+                ]
+    _px509 = POINTER(_x509)
+    def _X509_get_version(ptr):
+        asn1int = cast(ptr, _px509)[0].cert_info[0].version  
+        return libcrypto.ASN1_INTEGER_get(asn1int)
+
+    def _X509_get_notBefore(ptr):   
+        # (x)->cert_info->validity->notBefore
+        return cast(ptr, _px509)[0].cert_info[0].validity[0].notBefore
+    def _X509_get_notAfter(ptr):
+        return cast(ptr, _px509)[0].cert_info[0].validity[0].notAfter
 
 class X509Error(LibCryptoError):
     """
@@ -407,21 +433,16 @@ class X509(object):
         certificate version as integer. Really certificate stores 0 for
         version 1 and 2 for version 3, but we return 1 and 3
         """
-        asn1int = cast(self.cert, _px509)[0].cert_info[0].version
-        return libcrypto.ASN1_INTEGER_get(asn1int) + 1
+        return _X509_get_version(self.cert) + 1
     @property
     def startDate(self):
         """ Certificate validity period start date """
-        # Need deep poke into certificate structure
-        # (x)->cert_info->validity->notBefore
-        asn1 = cast(self.cert, _px509)[0].cert_info[0].validity[0].notBefore
+        asn1 = _X509_get_notBefore(self.cert)
         return __asn1date_to_datetime(asn1)
     @property
     def endDate(self):
         """ Certificate validity period end date """
-        # Need deep poke into certificate structure
-        # (x)->cert_info->validity->notAfter
-        asn1 = cast(self.cert, _px509)[0].cert_info[0].validity[0].notAfter
+        asn1 = _X509_get_notAfter(self.cert)
         return __asn1date_to_datetime(asn1)
     def check_ca(self):
         """ Returns True if certificate is CA certificate """
@@ -541,6 +562,7 @@ class StackOfX509(object):
                 freeid. If false, it is just pointer into another
                 structure i.e. CMS_ContentInfo
         """
+        self.need_free = False
         if  ptr is None:
             self.need_free = True
             self.ptr = libcrypto.sk_new_null()
