@@ -245,7 +245,7 @@ libcrypto.EVP_CIPHER_block_size.argtypes = (c_void_p, )
 #Function EVP_CIPHER_CTX_cleanup renamed to EVP_CIPHER_CTX_reset
 # in the OpenSSL 1.1.0
 if hasattr(libcrypto,"EVP_CIPHER_CTX_cleanup"):
-    Cipher.__ctxcleanup = libcrypto.EVP_CIPHER_CTX_cleanup.argtypes 
+    Cipher.__ctxcleanup = libcrypto.EVP_CIPHER_CTX_cleanup 
 else:
     Cipher.__ctxcleanup = libcrypto.EVP_CIPHER_CTX_reset
 Cipher.__ctxcleanup.argtypes  = (c_void_p, )
