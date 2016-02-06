@@ -56,7 +56,7 @@ class MAC(Digest):
         if self.key is None:
             raise DigestError("EVP_PKEY_new_mac_key")
         pctx=c_void_p()
-        self.ctx = libcrypto.EVP_MD_CTX_create()
+        self.ctx = self.newctx()
         if self.ctx == 0:
             raise DigestError("Unable to create digest context")
         if libcrypto.EVP_DigestSignInit(self.ctx,pointer(pctx),d,None,self.key) <= 0:

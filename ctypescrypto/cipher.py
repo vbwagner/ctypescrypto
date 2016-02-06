@@ -229,7 +229,7 @@ class Cipher(object):
         """
         try:
             if self.ctx is not None:
-                libcrypto.EVP_CIPHER_CTX_cleanup(self.ctx)
+                self.__ctxcleanup(self.ctx)
                 libcrypto.EVP_CIPHER_CTX_free(self.ctx)
                 del self.ctx
         except AttributeError:
@@ -241,7 +241,14 @@ class Cipher(object):
 # Used C function block_size
 #
 libcrypto.EVP_CIPHER_block_size.argtypes = (c_void_p, )
-libcrypto.EVP_CIPHER_CTX_cleanup.argtypes = (c_void_p, )
+
+#Function EVP_CIPHER_CTX_cleanup renamed to EVP_CIPHER_CTX_reset
+# in the OpenSSL 1.1.0
+if hasattr(libcrypto,"EVP_CIPHER_CTX_cleanup"):
+    Cipher.__ctxcleanup = libcrypto.EVP_CIPHER_CTX_cleanup.argtypes 
+else:
+    Cipher.__ctxcleanup = libcrypto.EVP_CIPHER_CTX_reset
+Cipher.__ctxcleanup.argtypes  = (c_void_p, )
 libcrypto.EVP_CIPHER_CTX_free.argtypes = (c_void_p, )
 libcrypto.EVP_CIPHER_CTX_new.restype = c_void_p
 libcrypto.EVP_CIPHER_CTX_set_padding.argtypes = (c_void_p, c_int)

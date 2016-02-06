@@ -97,7 +97,7 @@ class Digest(object):
         """
         Initializes digest using given type.
         """
-        self.ctx = libcrypto.EVP_MD_CTX_create()
+        self.ctx = self.newctx()
         if self.ctx is None:
             raise DigestError("Unable to create digest context")
         self.digest_out = None
@@ -167,7 +167,7 @@ class Digest(object):
         """
         try:
             if self.ctx is not None:
-                libcrypto.EVP_MD_CTX_destroy(self.ctx)
+                libcrypto.EVP_MD_CTX_free(self.ctx)
                 del self.ctx
         except AttributeError:
             pass
@@ -186,15 +186,22 @@ class Digest(object):
 # Declare function result and argument types
 libcrypto.EVP_get_digestbyname.restype = c_void_p
 libcrypto.EVP_get_digestbyname.argtypes = (c_char_p, )
-libcrypto.EVP_MD_CTX_create.restype = c_void_p
+# These two functions are renamed in OpenSSL 1.1.0
+if hasattr(libcrypto,"EVP_MD_CTX_create"):
+    Digest.newctx = libcrypto.EVP_MD_CTX_create
+    Digest.freectx = libcrypto.EVP_MD_CTX_destroy
+else:
+    Digest.newctx = libcrypto.EVP_MD_CTX_new
+    Digest.freectx = libcrypto.EVP_MD_CTX_free
+Digest.newctx.restype = c_void_p
+Digest.freectx.argtypes = (c_void_p, )
 # libcrypto.EVP_MD_CTX_create has no arguments
-libcrypto.EVP_DigestInit_ex.restupe = c_int
+libcrypto.EVP_DigestInit_ex.restype = c_int
 libcrypto.EVP_DigestInit_ex.argtypes = (c_void_p, c_void_p, c_void_p)
 libcrypto.EVP_DigestUpdate.restype = c_int
 libcrypto.EVP_DigestUpdate.argtypes = (c_void_p, c_char_p, c_longlong)
 libcrypto.EVP_DigestFinal_ex.restype = c_int
 libcrypto.EVP_DigestFinal_ex.argtypes = (c_void_p, c_char_p, POINTER(c_long))
-libcrypto.EVP_MD_CTX_destroy.argtypes = (c_void_p, )
 libcrypto.EVP_MD_CTX_copy.restype = c_int
 libcrypto.EVP_MD_CTX_copy.argtypes = (c_void_p, c_void_p)
 libcrypto.EVP_MD_type.argtypes = (c_void_p, )

@@ -57,8 +57,8 @@ class TestCustom(unittest.TestCase):
         x=Oid(sn)
         self.assertEqual(o,x)
     def testCleanup(self):
-        d='1.2.643.100.3'
-        sn="SNILS"
+        d='1.2.643.100.9'
+        sn="SNILX"
         long_name="Russian Pension security number"
         o=create(d,sn,long_name)
         cleanup()
