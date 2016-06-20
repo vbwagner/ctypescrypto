@@ -59,6 +59,8 @@ def CMS(data, format="PEM"):
         ptr = libcrypto.PEM_read_bio_CMS(bio.bio, None, None, None)
     else:
         ptr = libcrypto.d2i_CMS_bio(bio.bio, None)
+    if ptr is None:
+        raise CMSError("Error parsing CMS data")
     typeoid = Oid(libcrypto.OBJ_obj2nid(libcrypto.CMS_get0_type(ptr)))
     if typeoid.shortname() == "pkcs7-signedData":
         return SignedData(ptr)
