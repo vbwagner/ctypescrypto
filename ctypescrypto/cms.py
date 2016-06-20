@@ -84,7 +84,7 @@ class CMSBase(object):
         """
         bio = Membio()
         if not libcrypto.i2d_CMS_bio(bio.bio, self.ptr):
-            raise CMSError("writing CMS to PEM")
+            raise CMSError("writing CMS to DER")
         return str(bio)
 
     def pem(self):
