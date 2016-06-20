@@ -306,6 +306,8 @@ class EncryptedData(CMSBase):
 __all__ = ['CMS', 'CMSError', 'Flags', 'SignedData', 'EnvelopedData',
            'EncryptedData']
 
+libcrypto.CMS_get0_type.restype = c_void_p
+libcrypto.CMS_get0_type.argtypes = (c_void_p,)
 libcrypto.CMS_add1_cert.restype = c_int
 libcrypto.CMS_add1_cert.argtypes = (c_void_p, c_void_p)
 libcrypto.CMS_decrypt.restype = c_int

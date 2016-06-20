@@ -139,6 +139,8 @@ def cleanup():
 libcrypto.OBJ_nid2sn.restype = c_char_p
 libcrypto.OBJ_nid2ln.restype = c_char_p
 libcrypto.OBJ_nid2obj.restype = c_void_p
+libcrypto.OBJ_obj2nid.restype = c_int
 libcrypto.OBJ_obj2txt.argtypes = (c_char_p, c_int, c_void_p, c_int)
 libcrypto.OBJ_txt2nid.argtupes = (c_char_p, )
+libcrypto.OBJ_obj2nid.argtupes = (c_void_p, )
 libcrypto.OBJ_create.argtypes = (c_char_p, c_char_p, c_char_p)

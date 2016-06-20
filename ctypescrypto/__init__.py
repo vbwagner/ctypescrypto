@@ -25,6 +25,8 @@ else:
 if __libname__ is None:
     raise OSError("Cannot find OpenSSL crypto library")
 
+#__libname__ = "/usr/local/ssl/lib/libcrypto.so.1.1"
+
 libcrypto = CDLL(__libname__)
 libcrypto.OPENSSL_config.argtypes = (c_char_p, )
 libcrypto.OPENSSL_add_all_algorithms_conf()
