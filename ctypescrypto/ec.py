@@ -2,7 +2,7 @@
 Support for EC keypair operation missing form public libcrypto API
 """
 from ctypescrypto.pkey import PKey, PKeyError
-from ctypes import c_void_p, c_char_p, c_int, byref
+from ctypes import c_void_p, c_char_p, c_int, byref, POINTER
 from ctypescrypto import libcrypto
 
 __all__ = ['create']
@@ -63,18 +63,29 @@ def create(curve, data):
     libcrypto.EC_KEY_free(ec_key)
     return PKey(ptr=pkey, cansign=True)
 
-
 libcrypto.EVP_PKEY_new.restype = c_void_p
+libcrypto.EC_KEY_new_by_curve_name.restype = c_void_p
+libcrypto.EC_KEY_new_by_curve_name.argtypes = (c_int,)
 libcrypto.BN_new.restype = c_void_p
 libcrypto.BN_free.argtypes = (c_void_p, )
+libcrypto.BN_hex2bn.argtypes = (POINTER(c_void_p), c_char_p)
+libcrypto.BN_bin2bn.argtypes = ( c_char_p, c_int, c_void_p)
+libcrypto.BN_bin2bn.restype = c_void_p
 libcrypto.BN_CTX_new.restype = c_void_p
 libcrypto.BN_CTX_free.argtypes = (c_void_p, )
 libcrypto.BN_bin2bn.argtypes = (c_char_p, c_int, c_void_p)
+libcrypto.BN_nnmod.restype = c_int
+libcrypto.BN_nnmod.argtypes = (c_void_p, c_void_p, c_void_p, c_void_p)
 libcrypto.EC_KEY_set_private_key.argtypes = (c_void_p, c_void_p)
 libcrypto.EC_POINT_new.argtypes = (c_void_p, )
 libcrypto.EC_POINT_new.restype = c_void_p
 libcrypto.EC_POINT_mul.argtypes = (c_void_p, c_void_p, c_void_p, c_void_p,
                                    c_void_p, c_void_p)
 libcrypto.EC_KEY_set_public_key.argtypes = (c_void_p, c_void_p)
-
-
+libcrypto.EC_KEY_get0_group.restype = c_void_p
+libcrypto.EC_KEY_get0_group.argtypes = (c_void_p,)
+libcrypto.EC_KEY_free.argtypes=(c_void_p,)
+libcrypto.EVP_PKEY_set1_EC_KEY.argtypes = (c_void_p, c_void_p)
+libcrypto.EC_GROUP_set_asn1_flag.argtypes = (c_void_p, c_int)
+libcrypto.EC_GROUP_get_order.restype = c_int
+libcrypto.EC_GROUP_get_order.argtypes = (c_void_p, c_void_p, c_void_p)
