@@ -609,6 +609,9 @@ class StackOfX509(object):
             raise TypeError('StackOfX508 can contain only X509 objects')
         libcrypto.sk_push(self.ptr, libcrypto.X509_dup(value.cert))
 
+libcrypto.X509_free.argtypes = (c_void_p,)
+libcrypto.X509_dup.restype = c_void_p
+libcrypto.X509_dup.argtypes = (c_void_p, )
 libcrypto.i2a_ASN1_INTEGER.argtypes = (c_void_p, c_void_p)
 libcrypto.ASN1_STRING_print_ex.argtypes = (c_void_p, c_void_p, c_long)
 libcrypto.PEM_read_bio_X509.restype = c_void_p
@@ -642,12 +645,15 @@ libcrypto.X509_get_ext.restype = c_void_p
 libcrypto.X509_get_ext.argtypes = (c_void_p, c_int)
 libcrypto.X509V3_EXT_print.argtypes = (c_void_p, POINTER(_x509_ext), c_long,
                                        c_int)
+libcrypto.sk_num.restupe = c_int
+libcrypto.sk_num.argtypes= (c_void_p,)
 libcrypto.sk_set.argtypes = (c_void_p, c_int, c_void_p)
 libcrypto.sk_set.restype = c_void_p
 libcrypto.sk_value.argtypes = (c_void_p, c_int)
 libcrypto.sk_value.restype = c_void_p
-libcrypto.X509_dup.restype = c_void_p
+libcrypto.sk_delete.argtypes = (c_void_p, c_int)
 libcrypto.sk_new_null.restype = c_void_p
-libcrypto.X509_dup.argtypes = (c_void_p, )
+libcrypto.sk_pop_free.argtypes = (c_void_p, c_void_p)
+libcrypto.sk_push.argtypes = (c_void_p, c_void_p)
 libcrypto.X509_NAME_hash.restype = c_long
 libcrypto.X509_NAME_hash.argtypes = (c_void_p, )
