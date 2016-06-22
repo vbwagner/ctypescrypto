@@ -42,7 +42,7 @@ class Oid(object):
 
     def __init__(self, value):
         """
-        Object constuctor. Accepts string, integer, or another Oid
+        Object constructor. Accepts string, integer, or another Oid
         object.
 
         Integer should be OpenSSL numeric identifier (nid) as returned

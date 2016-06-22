@@ -24,6 +24,10 @@ class TestStandard(unittest.TestCase):
         o=Oid("2.5.4.3")
         x=Oid(o.nid)
         self.assertEqual(o.nid,x.nid)
+    def test_clone(self):
+        o1=Oid('2.5.4.3')
+        o2=Oid(o1)
+        self.assertEqual(o1.nid,o2.nid)
     def test_fromunicode(self):
         o=Oid(u'commonName')
         self.assertEqual(o.shortname(),'CN')
@@ -61,9 +65,19 @@ class TestCustom(unittest.TestCase):
         sn="SNILX"
         long_name="Russian Pension security number"
         o=create(d,sn,long_name)
+        self.assertEqual(str(o),'1.2.643.100.9')
+
         cleanup()
         with self.assertRaises(ValueError):
             x=Oid(sn)
+    def testFromObj(self):
+        from ctypescrypto import libcrypto
+        from ctypes import c_int, c_char_p, c_void_p
+        libcrypto.OBJ_txt2obj.argtypes = (c_char_p, c_int)
+        libcrypto.OBJ_txt2obj.restype = c_void_p
+        obj= libcrypto.OBJ_txt2obj("1.2.643.100.9",1)
+        oid=Oid.fromobj(obj)
+        self.assertEqual(str(oid),'1.2.643.100.9')
     def tearDown(self):
         # Always call cleanup before next test
         cleanup()
