@@ -209,6 +209,17 @@ Tests can be run using
 
 Test suite is fairly incomplete. Contributions are welcome.
 
+Note that you need properly installed OpenSSL library with set of CA
+certificates in the certs directory, otherwise default certstore test
+would fail.
+
+You also need gost engine to be available (check with 
+
+   openssl engine gost
+
+) otherwise mac test would crash with error. Unfortunately there is no
+non-HMAC MAC in the openssl core, so GOST MAC is only option.
+
 Possible future enhancements
 ----------------------------
 
