@@ -35,10 +35,12 @@ cUqktWYGr/GB65Zr5Ky1z/nha2bYCb6U4hTwbJP9CRCZr5hJklXn
             
         out=key.exportpriv()
         self.assertEqual(dump_key(out),dump_key(self.ec1priv))
+        self.assertEqual(str(key),dump_pub_key(self.ec1priv))
 
     def test_bignum(self):
         keyval='\xff'*32
         key=create(Oid("secp256k1"),keyval)
         self.assertEqual(dump_key(key.exportpriv()),dump_key(self.bigkey))
+        self.assertEqual(str(key),dump_pub_key(self.bigkey))
 if __name__ == "__main__":
     unittest.main()
