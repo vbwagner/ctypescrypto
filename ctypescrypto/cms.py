@@ -120,7 +120,7 @@ class SignedData(CMSBase):
             raise ValueError("Certificate doesn't match public key")
         bio = Membio(data)
         if certs is not None and len(certs) > 0:
-            certstack = StackOfX509(certs)
+            certstack = StackOfX509(certs).ptr
         else:
             certstack = None
         ptr = libcrypto.CMS_sign(cert.cert, pkey.key, certstack, bio.bio, flags)
