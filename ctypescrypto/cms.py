@@ -123,7 +123,7 @@ class SignedData(CMSBase):
             certstack = StackOfX509(certs)
         else:
             certstack = None
-        ptr = libcrypto.CMS_sign(cert.cert, pkey.ptr, certstack, bio.bio, flags)
+        ptr = libcrypto.CMS_sign(cert.cert, pkey.key, certstack, bio.bio, flags)
         if ptr is None:
             raise CMSError("signing message")
         return SignedData(ptr)
@@ -142,7 +142,7 @@ class SignedData(CMSBase):
             raise ValueError("Specified keypair has no private part")
         if cert.pubkey != pkey:
             raise ValueError("Certificate doesn't match public key")
-        if libcrypto.CMS_add1_signer(self.ptr, cert.cert, pkey.ptr,
+        if libcrypto.CMS_add1_signer(self.ptr, cert.cert, pkey.key,
                                           digest_type.digest, flags) is None:
             raise CMSError("adding signer")
         if flags & Flags.REUSE_DIGEST == 0:
@@ -263,7 +263,7 @@ class EnvelopedData(CMSBase):
         if pkey != cert.pubkey:
             raise ValueError("Certificate doesn't match private key")
         bio = Membio()
-        res = libcrypto.CMS_decrypt(self.ptr, pkey.ptr, cert.ccert, None,
+        res = libcrypto.CMS_decrypt(self.ptr, pkey.key, cert.ccert, None,
                                     bio.bio, flags)
         if res <= 0:
             raise CMSError("decrypting CMS")
