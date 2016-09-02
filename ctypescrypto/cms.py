@@ -243,7 +243,7 @@ class EnvelopedData(CMSBase):
         """
         recp = StackOfX509(recipients)
         bio = Membio(data)
-        cms_ptr = libcrypto.CMS_encrypt(recp.ptr, bio.bio, cipher.cipher_type,
+        cms_ptr = libcrypto.CMS_encrypt(recp.ptr, bio.bio, cipher.cipher,
                                         flags)
         if cms_ptr is None:
             raise CMSError("encrypt EnvelopedData")
@@ -263,7 +263,7 @@ class EnvelopedData(CMSBase):
         if pkey != cert.pubkey:
             raise ValueError("Certificate doesn't match private key")
         bio = Membio()
-        res = libcrypto.CMS_decrypt(self.ptr, pkey.key, cert.ccert, None,
+        res = libcrypto.CMS_decrypt(self.ptr, pkey.key, cert.cert, None,
                                     bio.bio, flags)
         if res <= 0:
             raise CMSError("decrypting CMS")
@@ -285,7 +285,7 @@ class EncryptedData(CMSBase):
         @param flags - OR-ed combination of Flags constant
         """
         bio = Membio(data)
-        ptr = libcrypto.CMS_EncryptedData_encrypt(bio.bio, cipher.cipher_type,
+        ptr = libcrypto.CMS_EncryptedData_encrypt(bio.bio, cipher.cipher,
                                                   key, len(key), flags)
         if ptr is None:
             raise CMSError("encrypt data")
