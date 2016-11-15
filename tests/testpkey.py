@@ -1,12 +1,21 @@
 from ctypescrypto.pkey import PKey
 import unittest
 from base64 import b64decode, b16decode
+from subprocess import Popen,PIPE,CalledProcessError
 
 def pem2der(s):
     start=s.find('-----\n')
     finish=s.rfind('\n-----END')
     data=s[start+6:finish]
     return b64decode(data)
+
+def runopenssl(args,indata):
+    p=Popen(['openssl']+args,stdin=PIPE,stdout=PIPE,stderr=PIPE,universal_newlines=True)
+    (out,err)=p.communicate(indata)
+    if p.returncode:
+        raise CalledProcessError(p.returncode," ".join(['openssl']+args)+":"+err)
+    return out
+
 
 class TestPKey(unittest.TestCase):
     rsa="""-----BEGIN PRIVATE KEY-----
@@ -26,6 +35,44 @@ Ao6uTm8fnkD4C836wS4mYAPqwRBK1JvnEXEQee9irf+ip89BAg74ViTcGF9lwJwQ
 gOM+X5Db+3pK
 -----END PRIVATE KEY-----
 """
+    rsaenc="""-----BEGIN RSA PRIVATE KEY-----
+Proc-Type: 4,ENCRYPTED
+DEK-Info: AES-256-CBC,7FF0E46291D60D35ACA881131C244655
+
+BeJoui1lRQDvvPr+gH8xCdqkcgKCLWpZTvFZmvrqXmPqMHpm20nK0ESAd6kKm8d1
+zaglRIHnnO6V7aDcwgOd3IYPEOnG2TIRQniZrwZdrXIfacscJ6Ekq+5YfLuyrRgq
+fscGl7ntm/eGLqwrhzuv7jAXpn9QWiiAld0EWcmZCAW7nGaUQtu4rc4ULwL5SC/M
+MOCPwpcD3SCQv55dX3cBOtfZ3lPbpgEpTpnNnj8OtxOkkIaG8yol7luwHvoOSyL/
+WuXGCpfJE4LzbxnSLhbiN7q+y/Sro3cGc9aO4tXToMqTFel4zqR0YgOeFazlDRi1
+mPuZcGLuSIef0kJn7Mg7jt0DQk579rTVxAhIu2rylTwEozkpCp5g4kGTJON++HQr
+BRrApm4XlAoH2GX1jqDBoWSnXCRH49jNGQrLwy469i+994cG8uVU9Z5cqm/LDIR9
+kwQfTJIvMi0g28NBMVgJ2gLj40OczxDGyNvBIbhPNswHljfsvPVr4vtxDGx8fS0N
+lUJUOL9me+XNZ5xGHYuT5DOr7GE+H3hKEg+XfrYEete9BeI4gm9cqESvrLY9EU5Q
+tOtnKKL7SglTZ5LxPMAedADC0o01nzr+D3gAiOhSgoZTrnQsSZ7iTJOtm3vNXwJx
+AgesYmXtr5mdiBPKQ1QA/jF5LUZji+5KENd5WHNQw7tOlMLDrPFVRfLZg1AQDljx
+u16kdyb71Kk3f6GCOfUntGr+kzppc3DDT+RcLetXphOOEQRy6C6/wmz08WlAPlu5
+mFfSDijpWxoUHooQISg5mE82oR8V81aBpbLtm7KevwY=
+-----END RSA PRIVATE KEY-----
+"""
+    pkcs8crypt="""-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIICoTAbBgkqhkiG9w0BBQMwDgQIipVEnsV/gQoCAggABIICgE1i42C4aBhykhOi
+EItFRE+9iBgiklGxoCJtukdp1UwDRKy/GJJ1rcS385CQy4Rs0zN8NH1faVRbf4Vt
+iNACHtJx30qMCdo64CR+GJYHS4g2lGaz7PFNma8SjnAbGYXwXkdm5zhwmiU++wC7
+W59u8oWS8Dj9dZBMzoOQGQT6xzZwQ14H65zHvC16HdKSNtRgXDWkBnD2cQzuOyuf
+rFLyEf7/FH6B7/yKDcwsEfu97uPPxMvuusD1UubWnltO/Hc2oCPibN+dGw1PY9mC
+18yGQtZkf5z30yhLosF62IVy3XY9Yf/TJYojIExoASrThGRvENzWkQ3qfnErqmng
+l+dy66bmLjicobF5bO3xAhpU1dL+4/1ba2QuthVNlg6Or/iII1ntNN4PFyYcEwmX
+e09C3dyOtV7qCq13S1bRkbZhzwi2QbLKALAzrZpF6VYmayTz8KjQOZ8BncAM+BiI
+CtwuZJoXLW9kT4D7UsaSZdjUvzBIak5qdCGWpKmahMfjEEsCg6ApuIYmFrCgiY9c
+0keYjY8DJ+4bEvqsQvTIaU9F9mFytI1E3LnR0NP1jHuOA7Jc+oNQ2adgFNj12jKQ
+qNt1bEGNCqQHSrw7JNCrB7s+QAFNqJtno6fIq7vVNkqadJlnBbCIgm7NlJeGg9j6
+a5YVNGlbs0J4dQF4Jw13302IBn3piSzthWL2gL98v/1lEwGuernEpPAjry3YhzM9
+VA/oVt22n3yVA6dOSVL1oUTJyawEqASmH0jHAzXNDz+QLSLmz82ARcZPqPvVc45e
+5h0xtqtFVkQLNbYzpNWGrx7R1hdr84nOKa8EsIxTRgEL/w9Y4Z/3xEoK2+KVBpMk
+oxUuxuU=
+-----END ENCRYPTED PRIVATE KEY-----
+"""
+    password="1111"
     rsakeytext="""Public-Key: (1024 bit)
 Modulus:
     00:bf:42:cd:56:6e:f5:b7:33:4e:60:7c:ef:be:a9:
@@ -62,12 +109,48 @@ AvhqdgCWLMG0D4Rj4oCqJcyG2WH8J5+0DnGujfEA4TwJ90ECvLa2SA==
     
     def test_unencrypted_pem(self):
         key=PKey(privkey=self.rsa)
+        self.assertTrue(key.cansign)
+        self.assertIsNotNone(key.key)
+        self.assertEqual(str(key),self.rsakeytext)
+    def test_encrypted_pem(self):
+        key=PKey(privkey=self.rsaenc,password=self.password)
+        self.assertIsNotNone(key.key)
+        self.assertEqual(str(key),self.rsakeytext)
+    def test_encrypted_pem_cb(self):
+        cb=lambda x:self.password
+        key=PKey(privkey=self.rsaenc,password=cb)
+        self.assertIsNotNone(key.key)
+        self.assertEqual(str(key),self.rsakeytext)
+    def test_encryped_pem_pkcs8(self):
+        key=PKey(privkey=self.pkcs8crypt,password=self.password)
+        self.assertIsNotNone(key.key)
+        self.assertEqual(str(key),self.rsakeytext)
+    def test_encrypted_der_pkcs8(self):
+        pkcs8der = pem2der(self.pkcs8crypt)
+        key=PKey(privkey=pkcs8der,password=self.password,format="DER")
         self.assertIsNotNone(key.key)
         self.assertEqual(str(key),self.rsakeytext)
     def test_export_priv_pem(self):
         key=PKey(privkey=self.ec1priv)
         out=key.exportpriv()
         self.assertEqual(self.ec1priv,out)
+    def test_export_priv_encrypt(self):
+        from ctypescrypto.cipher import CipherType
+        key=PKey(privkey=self.rsa)
+        pem=key.exportpriv(password='2222',cipher=CipherType("aes256"))
+        self.assertEqual(runopenssl(["pkey","-text_pub","-noout","-passin","pass:2222"],
+                                    pem),self.rsakeytext)
+    def test_export_priv_der(self):
+        key=PKey(privkey=self.rsa)
+        der=key.exportpriv(format="DER")
+        self.assertEqual(runopenssl(["pkey","-text_pub","-noout","-inform","DER"],
+            der),self.rsakeytext)
+    def test_export_priv_der_enc(self):
+        from ctypescrypto.cipher import CipherType
+        key=PKey(privkey=self.rsa)
+        der=key.exportpriv(format="DER",password='2222',cipher=CipherType("aes256"))
+        self.assertEqual(runopenssl(["pkcs8","-passin","pass:2222","-inform","DER"],
+            der),self.rsa)
     def test_unencrypted_pem_ec(self):
         
         key=PKey(privkey=self.ec1priv)
