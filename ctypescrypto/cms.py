@@ -120,10 +120,10 @@ class SignedData(CMSBase):
             raise ValueError("Certificate doesn't match public key")
         bio = Membio(data)
         if certs is not None and len(certs) > 0:
-            certstack = StackOfX509(certs)
+            certstack = StackOfX509(certs).ptr
         else:
             certstack = None
-        ptr = libcrypto.CMS_sign(cert.cert, pkey.ptr, certstack, bio.bio, flags)
+        ptr = libcrypto.CMS_sign(cert.cert, pkey.key, certstack, bio.bio, flags)
         if ptr is None:
             raise CMSError("signing message")
         return SignedData(ptr)
@@ -142,7 +142,7 @@ class SignedData(CMSBase):
             raise ValueError("Specified keypair has no private part")
         if cert.pubkey != pkey:
             raise ValueError("Certificate doesn't match public key")
-        if libcrypto.CMS_add1_signer(self.ptr, cert.cert, pkey.ptr,
+        if libcrypto.CMS_add1_signer(self.ptr, cert.cert, pkey.key,
                                           digest_type.digest, flags) is None:
             raise CMSError("adding signer")
         if flags & Flags.REUSE_DIGEST == 0:
@@ -243,7 +243,7 @@ class EnvelopedData(CMSBase):
         """
         recp = StackOfX509(recipients)
         bio = Membio(data)
-        cms_ptr = libcrypto.CMS_encrypt(recp.ptr, bio.bio, cipher.cipher_type,
+        cms_ptr = libcrypto.CMS_encrypt(recp.ptr, bio.bio, cipher.cipher,
                                         flags)
         if cms_ptr is None:
             raise CMSError("encrypt EnvelopedData")
@@ -263,7 +263,7 @@ class EnvelopedData(CMSBase):
         if pkey != cert.pubkey:
             raise ValueError("Certificate doesn't match private key")
         bio = Membio()
-        res = libcrypto.CMS_decrypt(self.ptr, pkey.ptr, cert.ccert, None,
+        res = libcrypto.CMS_decrypt(self.ptr, pkey.key, cert.cert, None,
                                     bio.bio, flags)
         if res <= 0:
             raise CMSError("decrypting CMS")
@@ -285,7 +285,7 @@ class EncryptedData(CMSBase):
         @param flags - OR-ed combination of Flags constant
         """
         bio = Membio(data)
-        ptr = libcrypto.CMS_EncryptedData_encrypt(bio.bio, cipher.cipher_type,
+        ptr = libcrypto.CMS_EncryptedData_encrypt(bio.bio, cipher.cipher,
                                                   key, len(key), flags)
         if ptr is None:
             raise CMSError("encrypt data")
