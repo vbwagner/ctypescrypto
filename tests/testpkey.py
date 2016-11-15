@@ -26,6 +26,26 @@ Ao6uTm8fnkD4C836wS4mYAPqwRBK1JvnEXEQee9irf+ip89BAg74ViTcGF9lwJwQ
 gOM+X5Db+3pK
 -----END PRIVATE KEY-----
 """
+    encr_rsa="""-----BEGIN RSA PRIVATE KEY-----
+Proc-Type: 4,ENCRYPTED
+DEK-Info: DES-CBC,6D81C7E3BA8AB481
+
+pEP9rhtw1Wj54XyL4zdFsMtAsXAV0PNfNc2rzD5Y1Ii27iX2iTr23LdQZgOPpLj0
+QuGo7R5tuU1ArH2Z1h3Qs6Y+xlwAeJBUqICbnNqKyvRgzyL9/vVxuN49QgaKj1SI
+nzDjBb19bfbWP5qrcyJqeNg32L90fh0dAqHqFOCOKh6DfaUEkSDfItIq0RZKun1j
+2HQ9WZ3Ah0/m/IRgo9jNY1aOWlpRAk+6tk+tQWkkXa9lu+azO9XbhJyNWV09wK2a
+uylcwtKSX88d501zrVNRbP6OIRDKRonsi3EZxc6MeUk66LOMgfI1a6W/c99ZU7iU
+ueurU+9c19ezjMrRwv3DF/LB9k+u8W2fyRHLJSQVCLVP/W3f+vnWR1/WJSeFe91U
+9QubfIo7uUZc7yz6IwxsSW9rUFG3E7PRlTA0Y6onsqIG75NDNyXpzTvNPvha7UQ9
+E67RYUSK6xG2nvBnxa86mYHb79E6vMLhcBzBa9YxCZqIxUTpxVtaBnR/dLQRDaqI
+2vR7CC77CT5Otvtk4RunfrFwEyKmbYsqcV1sLKj+Z8SauhcTEIUzg6iEu0T9/fyI
+uH1g1FPbxHa3z1LOsaV2veUsxDdgFyF6q35Qs32BBIXtBYEcCTp88xp8cm2ofU6J
+eappe4kUypxjksC9HEpHTJBKZ7qGDyAMWszpb59GOHoz7up5xZZ4YuVmdaRBcNQs
+BcNbFs4t/xLGffFGdQdEKZfw56decJ8DtpUGcuruc/xkS0uKQGvYUYVGtY8o4uGO
+MSPRjopQa9oEsHO2jb/sOcWIQnd4ceFfu50aqQLmrgg=
+-----END RSA PRIVATE KEY-----
+"""
+    password='pass'
     rsakeytext="""Public-Key: (1024 bit)
 Modulus:
     00:bf:42:cd:56:6e:f5:b7:33:4e:60:7c:ef:be:a9:
@@ -115,5 +135,13 @@ AvhqdgCWLMG0D4Rj4oCqJcyG2WH8J5+0DnGujfEA4TwJ90ECvLa2SA==
         s=str(newkey)
         self.assertEqual(s[:s.find("\n")],"Public-Key: (256 bit)")
         self.assertNotEqual(str(templkey),str(newkey))
+    def test_encrypted_pem(self):
+        key = PKey(privkey=self.encr_rsa, password=self.password)
+        self.assertIsNotNone(key.key)
+        self.assertEqual(str(key), self.rsakeytext)
+    def test_password_callback(self):
+        key = PKey(privkey=self.encr_rsa, callback=lambda length, rwflag, userdata: self.password)
+        self.assertIsNotNone(key.key)
+        self.assertEqual(str(key), self.rsakeytext)
 if __name__ == "__main__":
     unittest.main()
