@@ -1,5 +1,5 @@
 from ctypescrypto.pkey import PKey
-import unittest
+import unittest,re
 from base64 import b64decode, b16decode
 
 def pem2der(s):
@@ -46,7 +46,7 @@ fv+L/5abuNNG20wzUqRpncOhRANCAARWKXWeUZ6WiCKZ2kHx87jmJyx0G3ZB1iQC
 -----END PRIVATE KEY-----
 """
     ec1keytext="""Public-Key: (256 bit)
-pub: 
+pub:
     04:56:29:75:9e:51:9e:96:88:22:99:da:41:f1:f3:
     b8:e6:27:2c:74:1b:76:41:d6:24:02:f8:6a:76:00:
     96:2c:c1:b4:0f:84:63:e2:80:aa:25:cc:86:d9:61:
@@ -72,19 +72,19 @@ AvhqdgCWLMG0D4Rj4oCqJcyG2WH8J5+0DnGujfEA4TwJ90ECvLa2SA==
         
         key=PKey(privkey=self.ec1priv)
         self.assertIsNotNone(key.key)
-        self.assertEqual(str(key),self.ec1keytext)
+        self.assertEqual(re.sub("pub: \n","pub:\n",str(key)),self.ec1keytext)
     def test_unencrypted_der_ec(self):
         key=PKey(privkey=pem2der(self.ec1priv),format="DER")
         self.assertIsNotNone(key.key)
-        self.assertEqual(str(key),self.ec1keytext)
+        self.assertEqual(re.sub("pub: \n","pub:\n",str(key)),self.ec1keytext)
     def test_pubkey_pem(self):
         key=PKey(pubkey=self.ec1pub)
         self.assertIsNotNone(key.key)   
-        self.assertEqual(str(key),self.ec1keytext)
+        self.assertEqual(re.sub("pub: \n","pub:\n",str(key)),self.ec1keytext)
     def test_pubkey_der(self):
         key=PKey(pubkey=pem2der(self.ec1pub),format="DER")
         self.assertIsNotNone(key.key)   
-        self.assertEqual(str(key),self.ec1keytext)
+        self.assertEqual(re.sub("pub: \n","pub:\n",str(key)),self.ec1keytext)
     def test_compare(self):
         key1=PKey(privkey=self.ec1priv)
         self.assertIsNotNone(key1.key)

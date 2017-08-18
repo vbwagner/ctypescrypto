@@ -45,11 +45,11 @@ if hasattr(libcrypto,"X509_get_version"):
     _X509_get_version.restype = c_long
     _X509_get_version.argtypes = (c_void_p,)
 
-    _X509_get_notBefore=libcrypto.X509_get_notBefore
+    _X509_get_notBefore=libcrypto.X509_getm_notBefore
     _X509_get_notBefore.restype = c_void_p
     _X509_get_notBefore.argtypes = (c_void_p,)
 
-    _X509_get_notAfter=libcrypto.X509_get_notAfter
+    _X509_get_notAfter=libcrypto.X509_getm_notAfter
     _X509_get_notAfter.restype = c_void_p
     _X509_get_notAfter.argtypes = (c_void_p,)
 else:
@@ -101,6 +101,22 @@ else:
     def _X509_get_notAfter(ptr):
         return cast(ptr, _px509)[0].cert_info[0].validity[0].notAfter
 
+if hasattr(libcrypto,'sk_num'):
+    sk_num = libcrypto.sk_num
+    sk_set = libcrypto.sk_set
+    sk_value = libcrypto.sk_value
+    sk_delete = libcrypto.sk_delete
+    sk_new_null = libcrypto.sk_new_null
+    sk_pop_free = libcrypto.sk_pop_free
+    sk_push = libcrypto.sk_push
+else:
+    sk_num = libcrypto.OPENSSL_sk_num
+    sk_set = libcrypto.OPENSSL_sk_set
+    sk_value = libcrypto.OPENSSL_sk_value
+    sk_delete = libcrypto.OPENSSL_sk_delete
+    sk_new_null = libcrypto.OPENSSL_sk_new_null
+    sk_pop_free = libcrypto.OPENSSL_sk_pop_free
+    sk_push = libcrypto.OPENSSL_sk_push
 class X509Error(LibCryptoError):
     """
     Exception, generated when some openssl function fail
@@ -565,7 +581,7 @@ class StackOfX509(object):
         self.need_free = False
         if  ptr is None:
             self.need_free = True
-            self.ptr = libcrypto.sk_new_null()
+            self.ptr = sk_new_null()
             if certs is not None:
                 for crt in certs:
                     self.append(crt)
@@ -575,11 +591,11 @@ class StackOfX509(object):
             self.need_free = disposable
             self.ptr = ptr
     def __len__(self):
-        return libcrypto.sk_num(self.ptr)
+        return sk_num(self.ptr)
     def __getitem__(self, index):
         if index < 0 or index >= len(self):
             raise IndexError
-        p = libcrypto.sk_value(self.ptr, index)
+        p = sk_value(self.ptr, index)
         return X509(ptr=libcrypto.X509_dup(p))
     def __setitem__(self, index, value):
         if not self.need_free:
@@ -588,26 +604,26 @@ class StackOfX509(object):
             raise IndexError
         if not isinstance(value, X509):
             raise TypeError('StackOfX509 can contain only X509 objects')
-        p = libcrypto.sk_value(self.ptr, index)
-        libcrypto.sk_set(self.ptr, index, libcrypto.X509_dup(value.cert))
+        p = sk_value(self.ptr, index)
+        sk_set(self.ptr, index, libcrypto.X509_dup(value.cert))
         libcrypto.X509_free(p)
     def __delitem__(self, index):
         if not self.need_free:
             raise ValueError("Stack is read-only")
         if index < 0 or index >= len(self):
             raise IndexError
-        p = libcrypto.sk_delete(self.ptr, index)
+        p = sk_delete(self.ptr, index)
         libcrypto.X509_free(p)
     def __del__(self):
         if self.need_free:
-            libcrypto.sk_pop_free(self.ptr, libcrypto.X509_free)
+            sk_pop_free(self.ptr, libcrypto.X509_free)
     def append(self, value):
         """ Adds certificate to stack """
         if not self.need_free:
             raise ValueError("Stack is read-only")
         if not isinstance(value, X509):
             raise TypeError('StackOfX509 can contain only X509 objects')
-        libcrypto.sk_push(self.ptr, libcrypto.X509_dup(value.cert))
+        sk_push(self.ptr, libcrypto.X509_dup(value.cert))
 
 libcrypto.d2i_X509_bio.argtypes = (c_void_p,POINTER(c_void_p))
 libcrypto.X509_free.argtypes = (c_void_p,)
@@ -677,17 +693,17 @@ libcrypto.X509_NAME_print_ex.argtypes = (c_void_p, c_void_p, c_int, c_ulong)
 libcrypto.X509_PURPOSE_get_by_sname.argtypes=(c_char_p,)
 libcrypto.X509_verify.argtypes = (c_void_p, c_void_p)
 libcrypto.X509_verify_cert.argtypes = (c_void_p,)
-libcrypto.sk_num.restype = c_int
-libcrypto.sk_num.argtypes= (c_void_p,)
-libcrypto.sk_set.argtypes = (c_void_p, c_int, c_void_p)
-libcrypto.sk_set.restype = c_void_p
-libcrypto.sk_value.argtypes = (c_void_p, c_int)
-libcrypto.sk_value.restype = c_void_p
-libcrypto.sk_delete.argtypes = (c_void_p, c_int)
-libcrypto.sk_delete.restype = c_void_p
-libcrypto.sk_new_null.restype = c_void_p
-libcrypto.sk_pop_free.argtypes = (c_void_p, c_void_p)
-libcrypto.sk_push.argtypes = (c_void_p, c_void_p)
+sk_num.restype = c_int
+sk_num.argtypes= (c_void_p,)
+sk_set.argtypes = (c_void_p, c_int, c_void_p)
+sk_set.restype = c_void_p
+sk_value.argtypes = (c_void_p, c_int)
+sk_value.restype = c_void_p
+sk_delete.argtypes = (c_void_p, c_int)
+sk_delete.restype = c_void_p
+sk_new_null.restype = c_void_p
+sk_pop_free.argtypes = (c_void_p, c_void_p)
+sk_push.argtypes = (c_void_p, c_void_p)
 libcrypto.X509_NAME_hash.restype = c_long
 libcrypto.X509_NAME_hash.argtypes = (c_void_p, )
 libcrypto.X509_NAME_get_index_by_NID.argtypes = (c_void_p, c_int, c_int)

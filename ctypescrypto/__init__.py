@@ -4,9 +4,10 @@
 """
 
 
-from ctypes import CDLL, c_char_p
+from ctypes import CDLL, c_char_p, c_void_p, c_long,c_uint64
 from ctypes.util import find_library
 import sys
+global strings_loaded
 
 def config(filename=None):
     """
@@ -29,4 +30,11 @@ if __libname__ is None:
 
 libcrypto = CDLL(__libname__)
 libcrypto.OPENSSL_config.argtypes = (c_char_p, )
-libcrypto.OPENSSL_add_all_algorithms_conf()
+
+if hasattr(libcrypto,'OPENSSL_init_crypto'):
+    libcrypto.OPENSSL_init_crypto.argtypes = (c_uint64,c_void_p)
+    libcrypto.OPENSSL_init_crypto(2+4+8+0x40,None)
+    strings_loaded = True
+else:     
+    libcrypto.OPENSSL_add_all_algorithms_conf()
+    strings_loaded = False
