@@ -4,34 +4,47 @@ This module provides interface for low-level private/public keypair operation
 PKey object of this module is wrapper around OpenSSL EVP_PKEY object.
 """
 
-
-from ctypes import c_char_p, c_void_p, c_int, c_long, POINTER
+from ctypes import c_char_p, c_char, c_void_p, c_int, c_long, POINTER
 from ctypes import create_string_buffer, byref, memmove, CFUNCTYPE
 from ctypescrypto import libcrypto
+
 from ctypescrypto.exception import LibCryptoError, clear_err_stack
 from ctypescrypto.bio import Membio
 
 __all__ = ['PKeyError', 'password_callback', 'PKey', 'PW_CALLBACK_FUNC']
+
+
+PW_CALLBACK_FUNC = CFUNCTYPE(c_int, POINTER(c_char), c_int, c_int, c_char_p)
+""" Function type for pem password callback """
+
+
 class PKeyError(LibCryptoError):
     """ Exception thrown if libcrypto finctions return an error """
     pass
 
-PW_CALLBACK_FUNC = CFUNCTYPE(c_int, c_char_p, c_int, c_int, c_char_p)
-""" Function type for pem password callback """
 
-def password_callback(buf, length, rwflag, userdata):
+class _PasswordCallbackHelper(object):
     """
-    Example password callback for private key. Assumes that
-    password is stored in the userdata parameter, so allows to pass password
-    from constructor arguments to the libcrypto keyloading functions
+    Tool class for represent user defined password callback function as CFUNCTYPE function
     """
-    cnt = len(userdata)
-    if length < cnt:
-        cnt = length
-    memmove(buf, userdata, cnt)
-    return cnt
+    def __init__(self, format="PEM", callback=None):
+        if format != "PEM" and callback is not None:
+            raise TypeError("Only PEM key format supports encryption")
+        self._callback = callback
 
-_cb = PW_CALLBACK_FUNC(password_callback)
+    @property
+    def callback(self):
+        return self._pw_callback(self._callback)
+
+    @staticmethod
+    def _pw_callback(callback_func):
+        def c_callback(buf, length, rwflag, userdata):
+            res = callback_func(length, rwflag, userdata) if callback_func else userdata
+            cnt = min(length, len(res))
+            memmove(buf, res, cnt)
+            return cnt
+        return PW_CALLBACK_FUNC(c_callback)
+
 
 class PKey(object):
     """
@@ -48,7 +61,8 @@ class PKey(object):
          libcrypto routines
     """
     def __init__(self, ptr=None, privkey=None, pubkey=None, format="PEM",
-                 cansign=False, password=None, callback=_cb):
+                 cansign=False, password=None, callback=None):
+        helper = _PasswordCallbackHelper(format, callback)
         if not ptr is None:
             self.key = ptr
             self.cansign = cansign
@@ -63,7 +77,7 @@ class PKey(object):
             self.cansign = True
             if format == "PEM":
                 self.key = libcrypto.PEM_read_bio_PrivateKey(bio.bio, None,
-                                                             callback,
+                                                             helper.callback,
                                                              c_char_p(password))
             else:
                 self.key = libcrypto.d2i_PrivateKey_bio(bio.bio, None)
@@ -74,7 +88,7 @@ class PKey(object):
             self.cansign = False
             if format == "PEM":
                 self.key = libcrypto.PEM_read_bio_PUBKEY(bio.bio, None,
-                                                         callback,
+                                                         helper.callback,
                                                          c_char_p(password))
             else:
                 self.key = libcrypto.d2i_PUBKEY_bio(bio.bio, None)
@@ -250,7 +264,7 @@ class PKey(object):
         return str(bio)
 
     def exportpriv(self, format="PEM", password=None, cipher=None,
-                   callback=_cb):
+                   callback=None):
         """
         Returns private key as PEM or DER Structure.
         If password and cipher are specified, encrypts key
@@ -258,6 +272,8 @@ class PKey(object):
         an ctypescrypto.cipher.CipherType object
         """
         bio = Membio()
+        helper = _PasswordCallbackHelper(format, callback)
+
         if cipher is None:
             evp_cipher = None
         else:
@@ -265,12 +281,12 @@ class PKey(object):
         if format == "PEM":
             ret = libcrypto.PEM_write_bio_PrivateKey(bio.bio, self.key,
                                                      evp_cipher, None, 0,
-                                                     callback,
+                                                     helper.callback,
                                                      c_char_p(password))
         else:
             ret = libcrypto.i2d_PKCS8PrivateKey_bio(bio.bio, self.key,
                                                     evp_cipher, None, 0,
-                                                    callback,
+                                                    helper.callback,
                                                     c_char_p(password))
         if ret == 0:
             raise PKeyError("error serializing private key")
