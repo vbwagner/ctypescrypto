@@ -220,6 +220,13 @@ You also need gost engine to be available (check with
 ) otherwise mac test would crash with error. Unfortunately there is no
 non-HMAC MAC in the openssl core, so GOST MAC is only option.
 
+OpenSSL 1.0 includes GOST engine by default. For OpenSSL 1.1 and above
+GOST engine is developed as separate project and can be downloaded from
+[https://github.com/gost-engine/engine](https://github.com/gost-engine/engine)
+Debian buster and above includes gost engine as
+libengine-gost-openssl1.1 package.
+
+
 Possible future enhancements
 ----------------------------
 
