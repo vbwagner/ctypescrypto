@@ -2,8 +2,7 @@
 Exception which extracts libcrypto error information
 """
 from ctypes import c_ulong, c_char_p, create_string_buffer
-from ctypescrypto import libcrypto
-strings_loaded = False
+from ctypescrypto import libcrypto, strings_loaded
 
 __all__ = ['LibCryptoError', 'clear_err_stack']
 

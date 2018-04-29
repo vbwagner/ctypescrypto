@@ -133,8 +133,11 @@ def cleanup():
     """
     Removes all the objects, dynamically added by current
     application from database.
+
+    Note that in OpenSSL 1.1.0 and above OBJ_cleanup really does nothing
     """
-    libcrypto.OBJ_cleanup()
+    if hasattr(libcrypto,"OBJ_cleanup"):
+        libcrypto.OBJ_cleanup()
 
 libcrypto.OBJ_nid2sn.restype = c_char_p
 libcrypto.OBJ_nid2ln.restype = c_char_p
