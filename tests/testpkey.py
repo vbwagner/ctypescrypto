@@ -1,4 +1,5 @@
 from ctypescrypto.pkey import PKey
+from ctypescrypto import pyver
 import unittest,re
 from base64 import b64decode, b16decode
 from subprocess import Popen,PIPE,CalledProcessError
@@ -10,10 +11,12 @@ def pem2der(s):
     return b64decode(data)
 
 def runopenssl(args,indata):
-    p=Popen(['openssl']+args,stdin=PIPE,stdout=PIPE,stderr=PIPE,universal_newlines=True)
+    p=Popen(['openssl']+args,stdin=PIPE,stdout=PIPE,stderr=PIPE)
     (out,err)=p.communicate(indata)
     if p.returncode:
         raise CalledProcessError(p.returncode," ".join(['openssl']+args)+":"+err)
+    if pyver > 2:
+        out = out.decode("utf-8")
     return out
 
 
@@ -138,6 +141,8 @@ AvhqdgCWLMG0D4Rj4oCqJcyG2WH8J5+0DnGujfEA4TwJ90ECvLa2SA==
         from ctypescrypto.cipher import CipherType
         key=PKey(privkey=self.rsa)
         pem=key.exportpriv(password='2222',cipher=CipherType("aes256"))
+        if pyver >2:
+            pem = pem.encode("ascii")
         self.assertEqual(runopenssl(["pkey","-text_pub","-noout","-passin","pass:2222"],
                                     pem),self.rsakeytext)
     def test_export_priv_der(self):

@@ -4,7 +4,7 @@ PKCS5 PBKDF2 function.
 """
 
 from ctypes import c_char_p, c_int, c_void_p, create_string_buffer
-from ctypescrypto import libcrypto
+from ctypescrypto import libcrypto, chartype
 from ctypescrypto.digest import DigestType
 from ctypescrypto.exception import LibCryptoError
 
@@ -25,7 +25,11 @@ def pbkdf2(password, salt, outlen, digesttype="sha1", iterations=2000):
     """
     dgst = DigestType(digesttype)
     out = create_string_buffer(outlen)
-    res = libcrypto.PKCS5_PBKDF2_HMAC(password, len(password), salt, len(salt),
+    if isinstance(password,chartype):
+        pwd = password.encode("utf-8")
+    else:
+        pwd = password
+    res = libcrypto.PKCS5_PBKDF2_HMAC(pwd, len(pwd), salt, len(salt),
                                       iterations, dgst.digest, outlen, out)
     if res <= 0:
         raise LibCryptoError("error computing PBKDF2")

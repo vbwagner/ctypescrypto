@@ -13,9 +13,9 @@ from ctypescrypto.bio import Membio
 from ctypescrypto.pkey import PKey
 from ctypescrypto.oid import Oid
 from ctypescrypto.exception import LibCryptoError
-from ctypescrypto import libcrypto
+from ctypescrypto import libcrypto, pyver, chartype, inttype, bintype
 from datetime import datetime
-
+import sys
 try:
     from pytz import utc
 except ImportError:
@@ -160,7 +160,7 @@ class X509Name(object):
         """
         if self.need_free:
             libcrypto.X509_NAME_free(self.ptr)
-    def __str__(self):
+    def __bytes__(self):
         """
         Produces an ascii representation of the name, escaping all
         symbols > 0x80.  Probably it is not what you want, unless
@@ -169,7 +169,7 @@ class X509Name(object):
         bio = Membio()
         libcrypto.X509_NAME_print_ex(bio.bio, self.ptr, 0,
                                      self.PRINT_FLAG | self.ESC_MSB)
-        return str(bio)
+        return bio.__bytes__()
 
     def __unicode__(self):
         """
@@ -177,7 +177,13 @@ class X509Name(object):
         """
         bio = Membio()
         libcrypto.X509_NAME_print_ex(bio.bio, self.ptr, 0, self.PRINT_FLAG)
-        return unicode(bio)
+        return bio.__unicode__()
+    if pyver == 2:
+        __str__ = __bytes__
+    else:
+        __str__ = __unicode__
+            
+
     def __len__(self):
         """
         return number of components in the name
@@ -190,6 +196,10 @@ class X509Name(object):
         return libcrypto.X509_NAME_cmp(self.ptr, other.ptr)
     def __eq__(self, other):
         return libcrypto.X509_NAME_cmp(self.ptr, other.ptr) == 0
+    def __gt__(self, other):
+        return libcrypto.X509_NAME_cmp(self.ptr, other.ptr) > 0
+    def __lt__(self, other):
+        return libcrypto.X509_NAME_cmp(self.ptr, other.ptr) < 0
 
     def __getitem__(self, key):
         if isinstance(key, Oid):
@@ -201,8 +211,8 @@ class X509Name(object):
             value = libcrypto.X509_NAME_ENTRY_get_data(entry)
             bio = Membio()
             libcrypto.ASN1_STRING_print_ex(bio.bio, value, self.PRINT_FLAG)
-            return unicode(bio)
-        elif isinstance(key, (int, long)):
+            return chartype(bio)
+        elif isinstance(key, inttype):
             # Return OID, string tuple
             entry = libcrypto.X509_NAME_get_entry(self.ptr, key)
             if entry is None:
@@ -211,7 +221,7 @@ class X509Name(object):
             value = libcrypto.X509_NAME_ENTRY_get_data(entry)
             bio = Membio()
             libcrypto.ASN1_STRING_print_ex(bio.bio, value, self.PRINT_FLAG)
-            return (oid, unicode(bio))
+            return (oid, chartype(bio))
         else:
             raise TypeError("X509 NAME can be indexed by Oids or integers only")
 
@@ -248,14 +258,18 @@ class X509_EXT(object):
             self.ptr = cast(ptr, POINTER(_x509_ext))
     def __del__(self):
         libcrypto.X509_EXTENSION_free(self.ptr)
-    def __str__(self):
+    def __bytes__(self):
         bio = Membio()
         libcrypto.X509V3_EXT_print(bio.bio, self.ptr, 0x20010, 0)
-        return str(bio)
+        return bintype(bio)
     def __unicode__(self):
         bio = Membio()
         libcrypto.X509V3_EXT_print(bio.bio, self.ptr, 0x20010, 0)
-        return unicode(bio)
+        return chartype(bio)
+    if pyver == 2:
+        __str__ = __bytes__
+    else:
+        __str__ = __unicode__
     @property
     def oid(self):
         "Returns OID of the extension"
@@ -369,15 +383,17 @@ class X509(object):
         Frees certificate object
         """
         libcrypto.X509_free(self.cert)
-    def __str__(self):
+    def __bytes__(self):
         """ Returns der string of the certificate """
         bio = Membio()
         if libcrypto.i2d_X509_bio(bio.bio, self.cert) == 0:
             raise X509Error("error serializing certificate")
         return str(bio)
+    if pyver == 2:
+        __str__ = __bytes__
     def __repr__(self):
         """ Returns valid call to the constructor """
-        return "X509(data=" + repr(str(self)) + ",format='DER')"
+        return "X509(data=" + repr(self.pem()) + ",format='PEM')"
     @property
     def pubkey(self):
         """EVP PKEy object of certificate public key"""
@@ -492,14 +508,22 @@ class X509Store(object):
         if lookup is None:
             raise X509Error("error installing file lookup method")
         if file is not None:
-            if not libcrypto.X509_LOOKUP_ctrl(lookup, 1, file, 1, None) > 0:
+            if pyver == 2:
+                fn = file
+            else:
+                fn = file.encode(sys.getfilesystemencoding())
+            if not libcrypto.X509_LOOKUP_ctrl(lookup, 1, fn, 1, None) > 0:
                 raise X509Error("error loading trusted certs from file "+file)
         lookup = libcrypto.X509_STORE_add_lookup(self.store,
                                              libcrypto.X509_LOOKUP_hash_dir())
         if lookup is None:
             raise X509Error("error installing hashed lookup method")
         if dir is not None:
-            if not libcrypto.X509_LOOKUP_ctrl(lookup, 2, dir, 1, None) > 0:
+            if pyver == 2:
+                dr = dir
+            else:
+                dr = dir.encode(sys.getfilesystemencoding())
+            if not libcrypto.X509_LOOKUP_ctrl(lookup, 2, dr, 1, None) > 0:
                 raise X509Error("error adding hashed  trusted certs dir "+dir)
         if default:
             if not libcrypto.X509_LOOKUP_ctrl(lookup, 2, None, 3, None) > 0:

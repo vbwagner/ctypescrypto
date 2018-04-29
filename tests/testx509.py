@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
+from ctypescrypto import chartype, bintype, inttype
 from ctypescrypto.x509 import X509,X509Store,utc,StackOfX509
 from ctypescrypto.oid import Oid
 from tempfile import NamedTemporaryFile
@@ -122,16 +123,16 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
         self.assertEqual(c.pem(),self.cert1)
     def test_subject(self):
         c=X509(self.cert1)
-        self.assertEqual(unicode(c.subject),u'C=RU,ST=Москва,L=Москва,O=Частное лицо,CN=Виктор Вагнер')
+        self.assertEqual(chartype(c.subject),u'C=RU,ST=Москва,L=Москва,O=Частное лицо,CN=Виктор Вагнер')
     def test_subject_str(self):
         c=X509(self.cert1)
-        self.assertEqual(str(c.subject),b'C=RU,ST=\\D0\\9C\\D0\\BE\\D1\\81\\D0\\BA\\D0\\B2\\D0\\B0,L=\\D0\\9C\\D0\\BE\\D1\\81\\D0\\BA\\D0\\B2\\D0\\B0,O=\\D0\\A7\\D0\\B0\\D1\\81\\D1\\82\\D0\\BD\\D0\\BE\\D0\\B5 \\D0\\BB\\D0\\B8\\D1\\86\\D0\\BE,CN=\\D0\\92\\D0\\B8\\D0\\BA\\D1\\82\\D0\\BE\\D1\\80 \\D0\\92\\D0\\B0\\D0\\B3\\D0\\BD\\D0\\B5\\D1\\80')
+        self.assertEqual(bintype(c.subject),b'C=RU,ST=\\D0\\9C\\D0\\BE\\D1\\81\\D0\\BA\\D0\\B2\\D0\\B0,L=\\D0\\9C\\D0\\BE\\D1\\81\\D0\\BA\\D0\\B2\\D0\\B0,O=\\D0\\A7\\D0\\B0\\D1\\81\\D1\\82\\D0\\BD\\D0\\BE\\D0\\B5 \\D0\\BB\\D0\\B8\\D1\\86\\D0\\BE,CN=\\D0\\92\\D0\\B8\\D0\\BA\\D1\\82\\D0\\BE\\D1\\80 \\D0\\92\\D0\\B0\\D0\\B3\\D0\\BD\\D0\\B5\\D1\\80')
     def test_subject_len(self):
         c=X509(self.cert1)
         self.assertEqual(len(c.subject),5)
     def test_issuer(self):
         c=X509(self.cert1)
-        self.assertEqual(unicode(c.issuer),u'O=Удостоверяющий центр,CN=Виктор Вагнер,C=RU,ST=Москва')
+        self.assertEqual(chartype(c.issuer),u'O=Удостоверяющий центр,CN=Виктор Вагнер,C=RU,ST=Москва')
     def test_subjectfields(self):
         c=X509(self.cert1)
         self.assertEqual(c.subject[Oid("C")],"RU")
@@ -177,7 +178,7 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
         self.assertEqual(ca.issuer,ca.subject)
     def test_serial(self):
         c=X509(self.cert1)
-        self.assertEqual(c.serial,0xf941addf6362d979L)
+        self.assertEqual(c.serial,int("f941addf6362d979",16))
     def test_version(self):
         c=X509(self.cert1)
         self.assertEqual(c.version,3)
@@ -206,8 +207,8 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
     def test_extension_text(self):
         cert=X509(self.cert1)
         ext=cert.extensions[0]
-        self.assertEqual(str(ext),'CA:FALSE')
-        self.assertEqual(unicode(ext),u'CA:FALSE')
+        self.assertEqual(bintype(ext),b'CA:FALSE')
+        self.assertEqual(chartype(ext),u'CA:FALSE')
     def test_extenson_find(self):
         cert=X509(self.cert1)
         exts=cert.extensions.find(Oid('subjectAltName'))
@@ -246,7 +247,7 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
         c2=X509(self.digicert_cert)
         self.assertTrue(c2.verify(store))
     def test_verify_by_filestore(self):
-        trusted=NamedTemporaryFile(delete=False)
+        trusted=NamedTemporaryFile(delete=False,mode="w")
         trusted.write(self.ca_cert)
         trusted.close()
         goodcert=X509(self.cert1)
@@ -267,21 +268,21 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
     def test_certstack1(self):
         l=[]
         l.append(X509(self.cert1))
-        self.assertEqual(unicode(l[0].subject[Oid('CN')]),u'Виктор Вагнер')
+        self.assertEqual(chartype(l[0].subject[Oid('CN')]),u'Виктор Вагнер')
         l.append(X509(self.ca_cert))
         l.append(X509(self.digicert_cert))
         stack=StackOfX509(certs=l)
         self.assertEqual(len(stack),3)
         self.assertTrue(isinstance(stack[1],X509))
-        self.assertEqual(unicode(stack[0].subject[Oid('CN')]),u'Виктор Вагнер')
+        self.assertEqual(chartype(stack[0].subject[Oid('CN')]),u'Виктор Вагнер')
         with self.assertRaises(IndexError):
             c=stack[-1]
         with self.assertRaises(IndexError):
             c=stack[3]
         del stack[1]
         self.assertEqual(len(stack),2)
-        self.assertEqual(unicode(stack[0].subject[Oid('CN')]),u'Виктор Вагнер')
-        self.assertEqual(unicode(stack[1].subject[Oid('CN')]),u'DigiCert High Assurance EV CA-1')
+        self.assertEqual(chartype(stack[0].subject[Oid('CN')]),u'Виктор Вагнер')
+        self.assertEqual(chartype(stack[1].subject[Oid('CN')]),u'DigiCert High Assurance EV CA-1')
     def test_certstack2(self):
         stack=StackOfX509()
         stack.append(X509(self.cert1))
@@ -289,7 +290,7 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
         c=stack[1]
         stack[1]=X509(self.digicert_cert)
         self.assertEqual(len(stack),2)
-        self.assertEqual(unicode(stack[1].subject[Oid('CN')]),u'DigiCert High Assurance EV CA-1')
+        self.assertEqual(chartype(stack[1].subject[Oid('CN')]),u'DigiCert High Assurance EV CA-1')
         with self.assertRaises(IndexError):
             stack[-1]=c
         with self.assertRaises(IndexError):
@@ -301,7 +302,7 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
     def test_certstack3(self):
         l=[]
         l.append(X509(self.cert1))
-        self.assertEqual(unicode(l[0].subject[Oid('CN')]),u'Виктор Вагнер')
+        self.assertEqual(chartype(l[0].subject[Oid('CN')]),u'Виктор Вагнер')
         l.append(X509(self.ca_cert))
         l.append(X509(self.digicert_cert))
         stack=StackOfX509(certs=l)

@@ -1,7 +1,7 @@
 """
 Interface to OpenSSL BIO library
 """
-from ctypescrypto import libcrypto,pyver, inttype
+from ctypescrypto import libcrypto,pyver, inttype, chartype
 from ctypes import c_char_p, c_void_p, c_int, string_at, c_long
 from ctypes import POINTER, byref, create_string_buffer
 class Membio(object):
@@ -9,19 +9,30 @@ class Membio(object):
     Provides interface to OpenSSL memory bios
     use str() or unicode() to get contents of writable bio
     use bio member to pass to libcrypto function
+    
     """
-    def __init__(self, data=None):
+    def __init__(self, data=None, clone=False):
         """
-        If data is specified, creates read-only BIO. If data is
+        If data is specified, creates read-only BIO. 
+        If clone is True, makes copy of data in the instance member
+        If data is
         None, creates writable BIO, contents of which can be retrieved
         by str() or unicode()
+        
         """
         if data is None:
             method = libcrypto.BIO_s_mem()
             self.bio = libcrypto.BIO_new(method)
         else:
-            self.bio = libcrypto.BIO_new_mem_buf(c_char_p(data), len(data))
-
+            if isinstance(data, chartype):
+                data = data.encode("utf-8")
+                clone = True
+            if clone :
+                self.data = data
+                self.bio = libcrypto.BIO_new_mem_buf(c_char_p(self.data), len(data))
+            else:
+                self.bio = libcrypto.BIO_new_mem_buf(c_char_p(data), len(data))
+                
     def __del__(self):
         """
         Cleans up memory used by bio
