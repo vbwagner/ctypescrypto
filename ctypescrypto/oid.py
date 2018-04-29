@@ -18,7 +18,7 @@ library.
 This module provides Oid object which represents entry to OpenSSL
 OID database.
 """
-from ctypescrypto import libcrypto
+from ctypescrypto import libcrypto, pyver,bintype,chartype,inttype
 from ctypes import c_char_p, c_void_p, c_int, create_string_buffer
 from ctypescrypto.exception import LibCryptoError
 
@@ -49,14 +49,14 @@ class Oid(object):
         by some libcrypto function or extracted from some libcrypto
         structure
         """
-        if isinstance(value, unicode):
+        if isinstance(value, chartype):
             value = value.encode('ascii')
-        if isinstance(value, str):
+        if isinstance(value, bintype):
             self.nid = libcrypto.OBJ_txt2nid(value)
             if self.nid == 0:
                 raise ValueError("Cannot find object %s in the database" %
                                  value)
-        elif isinstance(value, (int, long)):
+        elif isinstance(value, inttype):
             short = libcrypto.OBJ_nid2sn(value)
             if short is None:
                 raise ValueError("No such nid %d in the database" % value)
@@ -68,27 +68,43 @@ class Oid(object):
     def __hash__(self):
         " Hash of object is equal to nid because Oids with same nid are same"
         return self.nid
-    def __cmp__(self, other):
-        " Compares NIDs of two objects "
-        return self.nid - other.nid
+    def __eq__ (self, other):
+        return self.nid == other.nid
+    def __hash__(self):
+        """ Returns NID of object as hash value. Should make Oids with 
+          identical NID compare equal and also let use Oids as
+          dictionary keys"""
+        return self.nid
     def __str__(self):
         " Default string representation of Oid is dotted-decimal "
         return self.dotted()
     def __repr__(self):
         " Returns constructor call of Oid with dotted representation "
         return "Oid('%s')" % (self.dotted())
-    def shortname(self):
-        " Returns short name if any "
-        return libcrypto.OBJ_nid2sn(self.nid)
-    def longname(self):
-        " Returns logn name if any "
-        return  libcrypto.OBJ_nid2ln(self.nid)
+    if pyver == 2:
+        def shortname(self):
+            " Returns short name if any "
+            return libcrypto.OBJ_nid2sn(self.nid)
+        def longname(self):
+            " Returns long name if any "
+            return  libcrypto.OBJ_nid2ln(self.nid)
+    else:
+        def shortname(self):
+            " Returns short name if any "
+            return libcrypto.OBJ_nid2sn(self.nid).decode('utf-8')
+        def longname(self):
+            " Returns long name if any "
+            return  libcrypto.OBJ_nid2ln(self.nid).decode('utf-8')
+            
     def dotted(self):
         " Returns dotted-decimal reperesentation "
         obj = libcrypto.OBJ_nid2obj(self.nid)
         buf = create_string_buffer(256)
         libcrypto.OBJ_obj2txt(buf, 256, obj, 1)
-        return buf.value
+        if pyver == 2:
+            return buf.value
+        else:
+            return buf.value.decode('ascii')
     @staticmethod
     def fromobj(obj):
         """
@@ -124,6 +140,10 @@ def create(dotted, shortname, longname):
     Oid alredy in database are undefined
 
     """
+    if pyver  > 2:
+        dotted = dotted.encode('ascii')
+        shortname = shortname.encode('utf-8')
+        longname = longname.encode('utf-8')
     nid = libcrypto.OBJ_create(dotted, shortname, longname)
     if nid == 0:
         raise LibCryptoError("Problem adding new OID to the  database")

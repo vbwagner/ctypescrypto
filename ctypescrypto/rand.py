@@ -3,7 +3,7 @@
 """
 
 from ctypes import create_string_buffer, c_char_p, c_int, c_double
-from ctypescrypto import libcrypto
+from ctypescrypto import libcrypto, bintype
 from ctypescrypto.exception import LibCryptoError
 
 __all__ = ['RandError', 'bytes', 'pseudo_bytes', 'seed', 'status']
@@ -48,7 +48,7 @@ def seed(data, entropy=None):
         If entropy is not None, it should be floating point(double)
         value estimating amount of entropy  in the data (in bytes).
     """
-    if not isinstance(data, str):
+    if not isinstance(data, bintype):
         raise TypeError("A string is expected")
     ptr = c_char_p(data)
     size = len(data)

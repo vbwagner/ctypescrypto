@@ -2,7 +2,7 @@
 engine loading and configuration
 """
 from ctypes import c_void_p, c_char_p, c_int
-from ctypescrypto import libcrypto
+from ctypescrypto import libcrypto,pyver
 from ctypescrypto.exception import LibCryptoError
 
 __all__ = ['default', 'set_default', 'Engine']
@@ -16,6 +16,8 @@ class Engine(object):
     in the token, accessed by engine
     """
     def __init__(self, engine_id, **kwargs):
+        if pyver > 2 or isinstance(engine_id, unicode):
+            engine_id = engine_id.encode('utf-8')
         eng = libcrypto.ENGINE_by_id(engine_id)
         if eng is None:
             # Try load engine

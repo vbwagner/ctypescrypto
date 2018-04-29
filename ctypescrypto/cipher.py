@@ -4,7 +4,7 @@ access to symmetric ciphers from libcrypto
 """
 from ctypes import create_string_buffer, c_char_p, c_void_p, c_int
 from ctypes import byref, POINTER
-from ctypescrypto import libcrypto
+from ctypescrypto import libcrypto, pyver, bintype
 from ctypescrypto.exception import LibCryptoError
 from ctypescrypto.oid import Oid
 
@@ -46,6 +46,8 @@ class CipherType(object):
         Constructs cipher algortihm using textual name as in openssl
         command line
         """
+        if pyver > 2:
+            cipher_name = cipher_name.encode('utf-8')
         self.cipher = libcrypto.EVP_get_cipherbyname(cipher_name)
         if self.cipher is None:
             raise CipherError("Unknown cipher: %s" % cipher_name)
@@ -190,8 +192,8 @@ class Cipher(object):
         """
         if self.cipher_finalized:
             raise CipherError("No updates allowed")
-        if not isinstance(data, str):
-            raise TypeError("A string is expected")
+        if not isinstance(data, bintype):
+            raise TypeError("A byte string is expected")
         if len(data) == 0:
             return ""
         outbuf = create_string_buffer(self.block_size+len(data))
@@ -221,7 +223,7 @@ class Cipher(object):
         if outlen.value > 0:
             return outbuf.raw[:int(outlen.value)]
         else:
-            return ""
+            return b""
 
     def _clean_ctx(self):
         """

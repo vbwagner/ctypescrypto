@@ -13,27 +13,27 @@ class MyTests(distutils.cmd.Command):
         import unittest
         result = unittest.TextTestResult(sys.stdout, True, True)
         suite = unittest.defaultTestLoader.discover("./tests")
-        print "Discovered %d test cases" % suite.countTestCases()
+        print ("Discovered %d test cases" % suite.countTestCases())
         result.buffer = True
         suite.run(result)
-        print ""
+        print ("")
         if not result.wasSuccessful():
             if len(result.errors):
-                print "============ Errors disovered ================="
+                print ("============ Errors disovered =================")
                 for res in result.errors:
-                    print res[0], ":", res[1]
+                    print (res[0], ":", res[1])
 
             if len(result.failures):
-                print "============ Failures disovered ================="
+                print ("============ Failures disovered =================")
                 for res in result.failures:
-                    print res[0], ":", res[1]
+                    print (res[0], ":", res[1])
             sys.exit(1)
         else:
-            print "All tests successful"
+            print ("All tests successful")
 
 setup(
     name="ctypescrypto",
-    version="0.4.1",
+    version="0.4.2",
     description="CTypes-based interface for some OpenSSL libcrypto features",
     author="Victor Wagner",
     author_email="vitus@wagner.pp.ru",

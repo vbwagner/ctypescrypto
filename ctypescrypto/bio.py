@@ -1,7 +1,7 @@
 """
 Interface to OpenSSL BIO library
 """
-from ctypescrypto import libcrypto
+from ctypescrypto import libcrypto,pyver, inttype
 from ctypes import c_char_p, c_void_p, c_int, string_at, c_long
 from ctypes import POINTER, byref, create_string_buffer
 class Membio(object):
@@ -26,10 +26,11 @@ class Membio(object):
         """
         Cleans up memory used by bio
         """
-        libcrypto.BIO_free(self.bio)
-        del self.bio
+        if hasattr(self,'bio'):
+            libcrypto.BIO_free(self.bio)
+            del self.bio
 
-    def __str__(self):
+    def __bytes__(self):
         """
         Returns current contents of buffer as byte string
         """
@@ -42,8 +43,11 @@ class Membio(object):
         Attempts to interpret current contents of buffer as UTF-8 string
         and convert it to unicode
         """
-        return str(self).decode("utf-8")
-
+        return self.__bytes__().decode("utf-8")
+    if pyver == 2:
+        __str__ = __bytes__
+    else: 
+        __str__ = __unicode__
     def read(self, length=None):
         """
         Reads data from readble BIO. For test purposes.
@@ -51,7 +55,7 @@ class Membio(object):
         If not BIO is read until end of buffer
         """
         if not length is None:
-            if not isinstance(length, (int, long)):
+            if not isinstance(length, inttype) :
                 raise TypeError("length to read should be number")
             buf = create_string_buffer(length)
             readbytes = libcrypto.BIO_read(self.bio, buf, length)
@@ -61,11 +65,11 @@ class Membio(object):
             if readbytes == -1:
                 raise IOError
             if readbytes == 0:
-                return ""
+                return b""
             return buf.raw[:readbytes]
         else:
             buf = create_string_buffer(1024)
-            out = ""
+            out = b""
             readbytes = 1
             while readbytes > 0:
                 readbytes = libcrypto.BIO_read(self.bio, buf, 1024)
@@ -82,10 +86,14 @@ class Membio(object):
         """
         Writes data to writable bio. For test purposes
         """
-        if isinstance(data, unicode):
-            data = data.encode("utf-8")
+        if pyver == 2:
+             if isinstance(data, unicode):
+                data = data.encode("utf-8")
+             else:
+                data = str(data)
         else:
-            data = str(data)
+             if not isinstance(data, bytes): 
+                data=str(data).encode("utf-8")   
 
         written = libcrypto.BIO_write(self.bio, data, len(data))
         if written == -2:

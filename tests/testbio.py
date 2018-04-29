@@ -1,29 +1,34 @@
 from ctypescrypto.bio import Membio
 import unittest
+import sys
+if sys.version[0]>'2':
+    def unicode(b):
+        return str(b)
+
 
 class TestRead(unittest.TestCase):
     def test_readshortstr(self):
-        s="A quick brown fox jumps over a lazy dog"
+        s=b"A quick brown fox jumps over a lazy dog"
         bio=Membio(s)
         data=bio.read()
         self.assertEqual(data,s)
         data2=bio.read()
-        self.assertEqual(data2,"")
+        self.assertEqual(data2,b"")
         del bio
     def test_readwithlen(self):
-        s="A quick brown fox jumps over a lazy dog"
+        s=b"A quick brown fox jumps over a lazy dog"
         bio=Membio(s)
         data=bio.read(len(s))
         self.assertEqual(data,s)
         data2=bio.read(5)
-        self.assertEqual(data2,"")
+        self.assertEqual(data2,b"")
     def test_readwrongtype(self):
-        s="A quick brown fox jumps over a lazy dog"
+        s=b"A quick brown fox jumps over a lazy dog"
         bio=Membio(s)
         with self.assertRaises(TypeError):
             data=bio.read("5")
     def test_reset(self):
-        s="A quick brown fox jumps over a lazy dog"
+        s=b"A quick brown fox jumps over a lazy dog"
         bio=Membio(s)
         data=bio.read()
         bio.reset()
@@ -32,7 +37,7 @@ class TestRead(unittest.TestCase):
         self.assertEqual(data,data2)
         self.assertEqual(data,s)
     def test_readlongstr(self):
-        poem='''Eyes of grey--a sodden quay,
+        poem=b'''Eyes of grey--a sodden quay,
 Driving rain and falling tears,
 As the steamer wears to sea
 In a parting storm of cheers.
@@ -87,7 +92,7 @@ Sing the Lovers' Litany:
         self.assertEqual(data,poem)
         del bio
     def test_readparts(self):
-        s="A quick brown fox jumps over the lazy dog"
+        s=b"A quick brown fox jumps over the lazy dog"
         bio=Membio(s)
         a=bio.read(10)
         self.assertEqual(a,s[0:10])
@@ -96,19 +101,19 @@ Sing the Lovers' Litany:
         c=bio.read()
         self.assertEqual(c,s[19:])
         d=bio.read()
-        self.assertEqual(d,"")
+        self.assertEqual(d,b"")
 
 class TestWrite(unittest.TestCase):
     def test_write(self):
         b=Membio()
-        b.write("A quick brown ")
-        b.write("fox jumps over ")
-        b.write("the lazy dog.")
+        b.write(b"A quick brown ")
+        b.write(b"fox jumps over ")
+        b.write(b"the lazy dog.")
         self.assertEqual(str(b),"A quick brown fox jumps over the lazy dog.")
 
     def test_unicode(self):
         b=Membio()
-        s='\xd0\xba\xd0\xb0\xd0\xba \xd1\x8d\xd1\x82\xd0\xbe \xd0\xbf\xd0\xbe-\xd1\x80\xd1\x83\xd1\x81\xd1\x81\xd0\xba\xd0\xb8'
+        s=b'\xd0\xba\xd0\xb0\xd0\xba \xd1\x8d\xd1\x82\xd0\xbe \xd0\xbf\xd0\xbe-\xd1\x80\xd1\x83\xd1\x81\xd1\x81\xd0\xba\xd0\xb8'
         b.write(s)
         self.assertEqual(unicode(b),u'\u043a\u0430\u043a \u044d\u0442\u043e \u043f\u043e-\u0440\u0443\u0441\u0441\u043a\u0438')
     def test_unicode2(self):

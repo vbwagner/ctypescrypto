@@ -2,10 +2,16 @@
 Exception which extracts libcrypto error information
 """
 from ctypes import c_ulong, c_char_p, create_string_buffer
-from ctypescrypto import libcrypto, strings_loaded
+from ctypescrypto import libcrypto, strings_loaded, pyver
 
 __all__ = ['LibCryptoError', 'clear_err_stack']
 
+if pyver == 2:
+    def _get_error_str(err_code,buf):
+        return libcrypto.ERR_error_string(err_code,buf)
+else:
+    def _get_error_str(err_code,buf):
+        return libcrypto.ERR_error_string(err_code,buf).decode('utf-8')
 class LibCryptoError(Exception):
     """
     Exception for libcrypto errors. Adds all the info, which can be
@@ -21,7 +27,7 @@ class LibCryptoError(Exception):
         mesg = msg
         buf = create_string_buffer(128)
         while err_code != 0:
-            mesg += "\n\t" + libcrypto.ERR_error_string(err_code, buf)
+            mesg += "\n\t" + _get_error_str(err_code, buf)
             err_code = libcrypto.ERR_get_error()
         super(LibCryptoError, self).__init__(mesg)
 

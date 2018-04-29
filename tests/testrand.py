@@ -13,11 +13,11 @@ class TestRand(unittest.TestCase):
         b2=pseudo_bytes(100)
         self.assertNotEqual(b,b2)
     def test_seed(self):
-        b="aaqwrwfsagdsgdsfgdsfgdfsgdsfgdsgfdsfgdsfg"
+        b=b"aaqwrwfsagdsgdsfgdsfgdfsgdsfgdsgfdsfgdsfg"
         seed(b)
         # Check if no segfault here
     def test_entropy(self):
-        b="aaqwrwfsagdsgdsfgdsfgdfsgdsfgdsgfdsfgdsfg"
+        b=b"aaqwrwfsagdsgdsfgdsfgdfsgdsfgdsgfdsfgdsfg"
         seed(b,2.25)
         # Check if no segfault here
     def test_Status(self):

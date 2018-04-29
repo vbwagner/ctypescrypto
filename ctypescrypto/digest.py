@@ -15,7 +15,7 @@ algorithm would be available both to this module and hashlib.
 """
 from ctypes import c_int, c_char_p, c_void_p, POINTER, c_long, c_longlong
 from ctypes import create_string_buffer, byref
-from ctypescrypto import libcrypto
+from ctypescrypto import libcrypto,pyver, bintype
 from ctypescrypto.exception import LibCryptoError
 from ctypescrypto.oid import Oid
 DIGEST_ALGORITHMS = ("MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512")
@@ -56,7 +56,7 @@ class DigestType(object):
             self.digest_name = digest_name.longname()
         else:
             self.digest_name = str(digest_name)
-        self.digest = libcrypto.EVP_get_digestbyname(self.digest_name)
+        self.digest = libcrypto.EVP_get_digestbyname(self.digest_name.encode('us-ascii'))
         if self.digest is None:
             raise DigestError("Unknown digest: %s" % self.digest_name)
 
@@ -124,8 +124,8 @@ class Digest(object):
         """
         if self.digest_finalized:
             raise DigestError("No updates allowed")
-        if not isinstance(data, str):
-            raise TypeError("A string is expected")
+        if not isinstance(data, bintype):
+            raise TypeError("A byte string is expected")
         if length is None:
             length = len(data)
         elif length > len(data):
@@ -180,7 +180,10 @@ class Digest(object):
             with hashlib
         """
         from base64 import b16encode
-        return b16encode(self.digest(data))
+        if pyver == 2:
+            return b16encode(self.digest(data))
+        else:
+            return b16encode(self.digest(data)).decode('us-ascii')
 
 
 # Declare function result and argument types

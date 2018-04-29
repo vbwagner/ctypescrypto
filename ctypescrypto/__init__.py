@@ -30,6 +30,15 @@ if __libname__ is None:
 
 libcrypto = CDLL(__libname__)
 libcrypto.OPENSSL_config.argtypes = (c_char_p, )
+pyver=int(sys.version[0])
+if pyver == 2:
+    bintype = str
+    chartype = unicode
+    inttype = (int, long)
+else:
+    bintype = bytes
+    chartype = str
+    inttype = int
 
 if hasattr(libcrypto,'OPENSSL_init_crypto'):
     libcrypto.OPENSSL_init_crypto.argtypes = (c_uint64,c_void_p)

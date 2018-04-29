@@ -31,8 +31,8 @@ class TestEncryptDecrypt(unittest.TestCase):
         with self.assertRaises(ValueError):
             c=cipher.Cipher(ct,None,None)
     def test_blockcipher(self):
-        data="sdfdsddf"
-        key='abcdabcd'
+        data=b"sdfdsddf"
+        key=b'abcdabcd'
         c=cipher.new("DES-CBC",key)
         enc=c.update(data)+c.finish()
         # See if padding is added by default
@@ -41,8 +41,8 @@ class TestEncryptDecrypt(unittest.TestCase):
         dec=d.update(enc)+d.finish()
         self.assertEqual(data,dec)
     def test_blockcipher_nopadding(self):
-        data="sdfdsddf"
-        key='abcdabcd'
+        data=b"sdfdsddf"
+        key=b'abcdabcd'
         c=cipher.new("DES-CBC",key)
         c.padding(False)
         enc=c.update(data)+c.finish()
@@ -53,9 +53,9 @@ class TestEncryptDecrypt(unittest.TestCase):
         dec=d.update(enc)+d.finish()
         self.assertEqual(data,dec)
     def test_ofb_cipher(self):
-        data="sdfdsddfxx"
-        key='abcdabcd'
-        iv='abcdabcd'
+        data=b"sdfdsddfxx"
+        key=b'abcdabcd'
+        iv=b'abcdabcd'
         c=cipher.new("DES-OFB",key,iv=iv)
         enc=c.update(data)+c.finish()
         # See if padding is added by default
@@ -65,8 +65,8 @@ class TestEncryptDecrypt(unittest.TestCase):
         self.assertEqual(data,dec)
 
     def test_ofb_noiv(self):
-        data="sdfdsddfxx"
-        encryptkey='abcdabcd'*4
+        data=b"sdfdsddfxx"
+        encryptkey=b'abcdabcd'*4
         decryptkey=encryptkey[0:5]+encryptkey[5:]
 
 
@@ -78,19 +78,19 @@ class TestEncryptDecrypt(unittest.TestCase):
         dec=d.update(enc)+d.finish()
         self.assertEqual(data,dec)
     def test_wrong_keylength(self):
-        data="sdfsdfxxx"
-        key="abcdabcd"
+        data=b"sdfsdfxxx"
+        key=b"abcdabcd"
         with self.assertRaises(ValueError):
             c=cipher.new("AES-128-OFB",key)
     def test_wrong_ivlength(self):
-        key="abcdabcdabcdabcd"
-        iv="xxxxx"
+        key=b"abcdabcdabcdabcd"
+        iv=b"xxxxx"
         with self.assertRaises(ValueError):
             c=cipher.new("AES-128-OFB",key,iv=iv)
     def test_variable_keylength(self):
-        encryptkey="abcdefabcdefghtlgvasdgdgsdgdsg"
-        data="asdfsdfsdfsdfsdfsdfsdfsdf"
-        iv="abcdefgh"
+        encryptkey=b"abcdefabcdefghtlgvasdgdgsdgdsg"
+        data=b"asdfsdfsdfsdfsdfsdfsdfsdf"
+        iv=b"abcdefgh"
         c=cipher.new("bf-ofb",encryptkey,iv=iv)
         ciphertext=c.update(data)+c.finish()
         decryptkey=encryptkey[0:5]+encryptkey[5:]
