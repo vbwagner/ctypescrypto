@@ -17,6 +17,12 @@ from ctypescrypto.bio import Membio
 from ctypescrypto.oid import Oid
 from ctypescrypto.x509 import StackOfX509
 
+# Check for neccesary functionality in libcrypto
+# LibreSSL fails this check
+
+if not hasattr(libcrypto,"CMS_decrypt"):
+    raise OSError("libcrypto lacks CMS functionality. Try using different libcrypto")
+
 class CMSError(LibCryptoError):
     """
     Exception which is raised when error occurs
