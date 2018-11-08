@@ -2,11 +2,11 @@
 Implements operations with CMS EnvelopedData and SignedData messages
 
 Contains function CMS() which parses CMS message and creates either
-EnvelopedData or SignedData objects (EncryptedData and CompressedData
+EnvelopedData, SignedData and EncryptedData objects (CompressedData
 can be easily added, because OpenSSL contain nessesary function)
 
 Each of these objects contains create() static method which is used to
-create it from raw data and neccessary certificates.
+create it from raw data and neccessary certificates/keys.
 
 
 """
@@ -57,8 +57,13 @@ class Flags:
 
 def CMS(data, format="PEM"):
     """
+    Factory function to create CMS objects from received messages.
+    
     Parses CMS data and returns either SignedData or EnvelopedData
-    object
+    object. format argument can be either "PEM" or "DER".
+
+    It determines object type from the contents of received CMS
+    structure.
     """
     bio = Membio(data)
     if format == "PEM":
@@ -82,7 +87,9 @@ class CMSBase(object):
     Common ancessor for all CMS types.
     Implements serializatio/deserialization
     """
-    def __init__(self, ptr=None):
+    def __init__(self, ptr):
+        if ptr is None:
+            raise ValueError("Cannot create CMS objects from nothing.  Use create static method or CMS factory function")
         self.ptr = ptr
     def __str__(self):
         """
@@ -107,6 +114,14 @@ class CMSBase(object):
 class SignedData(CMSBase):
     """
     Represents signed message (signeddata CMS type)
+
+    Use create static method to create signed message by signing
+    raw data by your private key.
+
+    Otherwise, if you got this object by parsing message by CMS
+    function, you can use verify method to check existing signature or
+    sign to add your own.
+   
     """
     @staticmethod
     def create(data, cert, pkey, flags=Flags.BINARY, certs=None):
@@ -239,6 +254,14 @@ class EnvelopedData(CMSBase):
     """
     Represents EnvelopedData CMS, i.e. message encrypted with session
     keys, encrypted with recipient's public keys
+
+    Use create static method to create such message. All the recipients 
+    certificates should be passed to this method at once, including your
+    own if you want to be able to decrypt message later yourself.
+    
+    Only thing you can do with EnvelopedData object you get by parsing
+    message with CMS function is to decrypt it.
+
     """
     @staticmethod
     def create(recipients, data, cipher, flags=0):
