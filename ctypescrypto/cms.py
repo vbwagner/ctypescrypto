@@ -216,10 +216,20 @@ class SignedData(CMSBase):
         return StackOfX509(ptr=signerlist, disposable=False)
 
     @property
+    def detached(self):
+        """
+        True, if SignedData object represents detached signature, i.e.
+        just signature without data inside.
+        """
+        return libcrypto.CMS_is_detached(self.ptr) != 0
+    @property
     def data(self):
         """
         Returns signed data if present in the message
         """
+        # Check if signatire is detached
+        if self.detached:
+            return None
         bio = Membio()
         if not libcrypto.CMS_verify(self.ptr, None, None, None, bio.bio,
                                     Flags.NO_VERIFY):
@@ -363,6 +373,8 @@ libcrypto.CMS_get0_signers.argtypes = (c_void_p, )
 libcrypto.CMS_get1_certs.restype = c_void_p
 libcrypto.CMS_get1_certs.argtypes = (c_void_p, )
 libcrypto.CMS_sign.restype = c_void_p
+libcrypto.CMS_is_detached.argtypes = (c_void_p,)
+libcrypto.CMS_is_detached.restype = c_int
 libcrypto.CMS_sign.argtypes = (c_void_p, c_void_p, c_void_p, c_void_p, c_uint)
 libcrypto.CMS_add1_signer.restype = c_void_p
 libcrypto.CMS_add1_signer.argtypes = (c_void_p, c_void_p, c_void_p,
