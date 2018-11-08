@@ -88,6 +88,10 @@ class CMSBase(object):
     Implements serializatio/deserialization
     """
     def __init__(self, ptr):
+        """
+        User should never call CMS objects constructors directly,
+        use create static method or CMS factory function.
+        """
         if ptr is None:
             raise ValueError("Cannot create CMS objects from nothing.  Use create static method or CMS factory function")
         self.ptr = ptr
