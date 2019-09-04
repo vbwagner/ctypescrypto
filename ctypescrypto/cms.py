@@ -104,6 +104,15 @@ class CMSBase(object):
             raise CMSError("writing CMS to DER")
         return str(bio)
 
+    def bytes(self):
+        """
+        Serialize in DER format in bytes.
+        """
+        bio = Membio()
+        if not libcrypto.i2d_CMS_bio(bio.bio, self.ptr):
+            raise CMSError("writing CMS to DER")
+        return bio.__bytes__()
+
     def pem(self):
         """
         Serialize in PEM format
@@ -313,6 +322,26 @@ class EnvelopedData(CMSBase):
         if res <= 0:
             raise CMSError("decrypting CMS")
         return str(bio)
+
+    def decrypt_bytes(self, pkey, cert, flags=0):
+        """
+        Decrypts message
+        @param pkey - private key to decrypt
+        @param cert - certificate of this private key (to find
+            neccessary RecipientInfo
+        @param flags - flags
+        @returns - decrypted data as bytes.
+        """
+        if not pkey.cansign:
+            raise ValueError("Specified keypair has no private part")
+        if pkey != cert.pubkey:
+            raise ValueError("Certificate doesn't match private key")
+        bio = Membio()
+        res = libcrypto.CMS_decrypt(self.ptr, pkey.key, cert.cert, None,
+                                    bio.bio, flags)
+        if res <= 0:
+            raise CMSError("decrypting CMS")
+        return bio.__bytes__()
 
 class EncryptedData(CMSBase):
     """
