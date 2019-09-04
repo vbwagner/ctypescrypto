@@ -113,6 +113,9 @@ class CMSBase(object):
             raise CMSError("writing CMS to PEM")
         return str(bio)
 
+    def __del__(self):
+        libcrypto.CMS_ContentInfo_free(self.ptr)
+
 
 #pylint: disable=R0921
 class SignedData(CMSBase):
@@ -391,3 +394,4 @@ libcrypto.PEM_read_bio_CMS.argtypes = (c_void_p, POINTER(c_void_p),
                                        c_void_p, c_void_p)
 libcrypto.PEM_write_bio_CMS.restype = c_int
 libcrypto.PEM_write_bio_CMS.argtypes = (c_void_p, c_void_p)
+libcrypto.CMS_ContentInfo_free.argtypes = (c_void_p, )
