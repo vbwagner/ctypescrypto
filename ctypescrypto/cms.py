@@ -104,6 +104,15 @@ class CMSBase(object):
             raise CMSError("writing CMS to DER")
         return str(bio)
 
+    def __bytes__(self):
+        """
+        Serialize in DER format. Return bytes
+        """
+        bio = Membio()
+        if not libcrypto.i2d_CMS_bio(bio.bio, self.ptr):
+            raise CMSError("writing CMS to DER")
+        return bytes(bio)
+
     def pem(self):
         """
         Serialize in PEM format
@@ -315,7 +324,11 @@ class EnvelopedData(CMSBase):
                                     bio.bio, flags)
         if res <= 0:
             raise CMSError("decrypting CMS")
-        return str(bio)
+
+        if flags & Flags.BINARY != 0: ## If we are expecting binary data
+            return bytes(bio) # we return bytes
+        else:
+            return str(bio) # else we return a string
 
 class EncryptedData(CMSBase):
     """
