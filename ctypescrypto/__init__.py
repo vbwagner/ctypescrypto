@@ -7,6 +7,7 @@
 from ctypes import CDLL, c_char_p, c_void_p, c_long,c_uint64
 from ctypes.util import find_library
 import sys
+import os
 global strings_loaded
 
 def config(filename=None):
@@ -22,6 +23,12 @@ if sys.platform.startswith('win'):
     __libname__ = find_library('libeay32')
 else:
     __libname__ = find_library('crypto')
+
+# Last ditch homebrew openssl
+DARWIN_OPENSSL_PATH = '/usr/local/opt/openssl/lib/libcrypto.dylib'
+if __libname__ is None and sys.platform == 'darwin' and os.path.isfile(DARWIN_OPENSSL_PATH):
+    __libname__ = DARWIN_OPENSSL_PATH
+
 
 if __libname__ is None:
     raise OSError("Cannot find OpenSSL crypto library")
